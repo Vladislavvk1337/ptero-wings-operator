@@ -51,7 +51,7 @@ spec:
       kubernetes.io/os: linux
   lifecycle:
     suspended: false
-    # Applied to the StatefulSet pod template; leave empty for default Always, only Always is currently supported when set.
+    # Applied to the StatefulSet pod template; omitted defaults to Always, and if set the value must be Always.
     restartPolicy: Always
   protection:
     snapshotBeforeDelete: true
