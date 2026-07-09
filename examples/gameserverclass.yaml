@@ -1,0 +1,28 @@
+apiVersion: gameserver.pterodactyl.io/v1alpha1
+kind: GameServerClass
+metadata:
+  name: minecraft-vanilla
+spec:
+  gameType: minecraft
+  defaultImage: itzg/minecraft-server:latest
+  defaultCommand: []
+  defaultResources:
+    requests:
+      cpu: "500m"
+      memory: "1Gi"
+    limits:
+      cpu: "2"
+      memory: "2Gi"
+  defaultStorage:
+    size: 10Gi
+    accessMode: ReadWriteOnce
+    mountPath: /data
+  defaultNetwork:
+    serviceType: NodePort
+    ports:
+      - name: game
+        protocol: TCP
+        containerPort: 25565
+  placementDefaults:
+    nodeSelector:
+      kubernetes.io/os: linux

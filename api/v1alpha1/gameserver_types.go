@@ -128,7 +128,8 @@ type StorageSpec struct {
 	// +optional
 	MountPath string `json:"mountPath,omitempty"`
 
-	// ExistingClaim adopts an existing PVC instead of creating a new one.
+	// ExistingClaim is deprecated and not supported by the operator.
+	// Every GameServer gets its own managed PVC.
 	// +optional
 	ExistingClaim string `json:"existingClaim,omitempty"`
 }

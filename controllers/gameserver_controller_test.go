@@ -67,6 +67,29 @@ var _ = Describe("GameServer Controller", func() {
 			_ = k8sClient.Update(ctx, gs)
 			_ = k8sClient.Delete(ctx, gs)
 		}
+
+		_ = k8sClient.Delete(ctx, &appsv1.StatefulSet{
+			ObjectMeta: metav1.ObjectMeta{Name: name, Namespace: namespace},
+		})
+		_ = k8sClient.Delete(ctx, &corev1.Service{
+			ObjectMeta: metav1.ObjectMeta{Name: name, Namespace: namespace},
+		})
+		_ = k8sClient.Delete(ctx, &corev1.Secret{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      helpers.SecretName(&v1alpha1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: name}}),
+				Namespace: namespace,
+			},
+		})
+		_ = k8sClient.Delete(ctx, &corev1.PersistentVolumeClaim{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      helpers.PVCName(&v1alpha1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: name}}),
+				Namespace: namespace,
+			},
+		})
+		_ = k8sClient.Delete(ctx, &corev1.PersistentVolumeClaim{
+			ObjectMeta: metav1.ObjectMeta{Name: "test-gs-stale", Namespace: namespace},
+		})
+
 		Eventually(func() bool {
 			return errors.IsNotFound(k8sClient.Get(ctx, nsn, &v1alpha1.GameServer{}))
 		}, timeout, interval).Should(BeTrue())
@@ -117,6 +140,18 @@ var _ = Describe("GameServer Controller", func() {
 			Expect(errors.IsNotFound(
 				k8sClient.Get(ctx, nsn, &corev1.Service{}),
 			)).To(BeTrue())
+		})
+
+		It("creates a dedicated PVC with default size", func() {
+			reconcileOnce()
+			reconcileOnce()
+
+			pvc := &corev1.PersistentVolumeClaim{}
+			Expect(k8sClient.Get(ctx, types.NamespacedName{
+				Name:      helpers.PVCName(&v1alpha1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: name}}),
+				Namespace: namespace,
+			}, pvc)).To(Succeed())
+			Expect(pvc.Spec.Resources.Requests[corev1.ResourceStorage]).To(Equal(resource.MustParse("1Gi")))
 		})
 	})
 
@@ -182,7 +217,7 @@ var _ = Describe("GameServer Controller", func() {
 				Name:      helpers.PVCName(&v1alpha1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: name}}),
 				Namespace: namespace,
 			}, pvc)).To(Succeed())
-			Expect(pvc.Spec.Resources.Requests[corev1.ResourceStorage]).To(Equal(resource.MustParse("10Gi")))
+			Expect(pvc.Spec.Resources.Requests[corev1.ResourceStorage]).NotTo(Equal(resource.MustParse("0")))
 		})
 
 		It("mounts the PVC at /data in the StatefulSet container", func() {

@@ -25,6 +25,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/equality"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
 	v1alpha1 "github.com/Vladislavvk1337/ptero-wings-operator/api/v1alpha1"
@@ -83,6 +84,10 @@ func (r *GameServerReconciler) reconcilePVC(ctx context.Context, gs, effective *
 		return err
 	}
 
+	if err := r.deleteExtraPVCs(ctx, gs, desired.Name); err != nil {
+		return err
+	}
+
 	existing := &corev1.PersistentVolumeClaim{}
 	err := r.Get(ctx, types.NamespacedName{Name: desired.Name, Namespace: desired.Namespace}, existing)
 	if apierrors.IsNotFound(err) {
@@ -97,6 +102,27 @@ func (r *GameServerReconciler) reconcilePVC(ctx context.Context, gs, effective *
 		updated := existing.DeepCopy()
 		updated.Labels = desired.Labels
 		return r.Update(ctx, updated)
+	}
+	return nil
+}
+
+func (r *GameServerReconciler) deleteExtraPVCs(ctx context.Context, gs *v1alpha1.GameServer, desiredName string) error {
+	var pvcList corev1.PersistentVolumeClaimList
+	if err := r.List(ctx, &pvcList,
+		client.InNamespace(gs.Namespace),
+		client.MatchingLabels{"gameserver.pterodactyl.io/name": gs.Name},
+	); err != nil {
+		return err
+	}
+
+	for i := range pvcList.Items {
+		pvc := &pvcList.Items[i]
+		if pvc.Name == desiredName {
+			continue
+		}
+		if err := r.Delete(ctx, pvc); client.IgnoreNotFound(err) != nil {
+			return err
+		}
 	}
 	return nil
 }

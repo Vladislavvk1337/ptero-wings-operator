@@ -1,0 +1,19 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ptero-wings-gateway
+  namespace: ptero-system
+  labels:
+    app.kubernetes.io/name: ptero-wings-gateway
+    app.kubernetes.io/component: gateway
+    app.kubernetes.io/part-of: ptero-wings-operator
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: ptero-wings-gateway
+  ports:
+    - name: https
+      port: 443
+      targetPort: 8090
+      protocol: TCP

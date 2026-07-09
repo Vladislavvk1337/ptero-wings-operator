@@ -57,5 +57,9 @@ func ValidateEffective(gs *v1alpha1.GameServer) error {
 		errs = append(errs, fmt.Errorf("spec.lifecycle.deletePolicy %q is invalid; use Delete or Retain", gs.Spec.Lifecycle.DeletePolicy))
 	}
 
+	if gs.Spec.Storage.ExistingClaim != "" {
+		errs = append(errs, fmt.Errorf("spec.storage.existingClaim is not supported; each GameServer gets a dedicated PVC"))
+	}
+
 	return errors.Join(errs...)
 }

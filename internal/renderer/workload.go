@@ -113,16 +113,12 @@ func buildPodSpec(gs *v1alpha1.GameServer, container corev1.Container) corev1.Po
 	}
 
 	if helpers.NeedsStorage(gs) {
-		claimName := helpers.PVCName(gs)
-		if gs.Spec.Storage.ExistingClaim != "" {
-			claimName = gs.Spec.Storage.ExistingClaim
-		}
 		spec.Volumes = []corev1.Volume{
 			{
 				Name: "data",
 				VolumeSource: corev1.VolumeSource{
 					PersistentVolumeClaim: &corev1.PersistentVolumeClaimVolumeSource{
-						ClaimName: claimName,
+						ClaimName: helpers.PVCName(gs),
 					},
 				},
 			},

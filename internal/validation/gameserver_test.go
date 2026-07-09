@@ -105,3 +105,11 @@ func TestValidateEffective_ValidDeletePolicies(t *testing.T) {
 		}
 	}
 }
+
+func TestValidateEffective_ExistingClaimIsRejected(t *testing.T) {
+	gs := newValid()
+	gs.Spec.Storage.ExistingClaim = "legacy-pvc"
+	if err := validation.ValidateEffective(gs); err == nil {
+		t.Error("expected error for spec.storage.existingClaim")
+	}
+}

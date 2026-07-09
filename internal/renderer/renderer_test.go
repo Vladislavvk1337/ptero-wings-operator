@@ -85,18 +85,27 @@ func TestStatefulSet_WithPorts(t *testing.T) {
 
 // ---- PVC -------------------------------------------------------------------
 
-func TestPVC_NilWhenNoStorage(t *testing.T) {
+func TestPVC_DefaultWhenNoStorage(t *testing.T) {
 	gs := baseGS("srv")
-	if renderer.PVC(gs) != nil {
-		t.Error("expected nil PVC when no storage requested")
+	pvc := renderer.PVC(gs)
+	if pvc == nil {
+		t.Fatal("expected non-nil PVC")
+	}
+	got := pvc.Spec.Resources.Requests[corev1.ResourceStorage]
+	if got.Cmp(resource.MustParse("1Gi")) != 0 {
+		t.Errorf("default storage request = %s", got.String())
 	}
 }
 
-func TestPVC_NilWhenExistingClaim(t *testing.T) {
+func TestPVC_DedicatedWhenExistingClaimIsSet(t *testing.T) {
 	gs := baseGS("srv")
 	gs.Spec.Storage.ExistingClaim = "my-pvc"
-	if renderer.PVC(gs) != nil {
-		t.Error("expected nil PVC when existingClaim is set")
+	pvc := renderer.PVC(gs)
+	if pvc == nil {
+		t.Fatal("expected non-nil PVC")
+	}
+	if pvc.Name != "srv-data" {
+		t.Errorf("PVC name = %q", pvc.Name)
 	}
 }
 
