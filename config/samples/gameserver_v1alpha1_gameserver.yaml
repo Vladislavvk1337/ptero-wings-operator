@@ -34,7 +34,6 @@ spec:
   storage:
     size: 10Gi
     mountPath: /data
-    deletePolicy: Retain
   network:
     serviceType: NodePort
     ports:
