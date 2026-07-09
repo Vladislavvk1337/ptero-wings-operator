@@ -4,25 +4,22 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.14.0
-  name: gameservers.gameserver.pterodactyl.io
+  name: gameserverclasses.gameserver.pterodactyl.io
 spec:
   group: gameserver.pterodactyl.io
   names:
-    kind: GameServer
-    listKind: GameServerList
-    plural: gameservers
-    singular: gameserver
-  scope: Namespaced
+    kind: GameServerClass
+    listKind: GameServerClassList
+    plural: gameserverclasses
+    singular: gameserverclass
+  scope: Cluster
   versions:
   - additionalPrinterColumns:
-    - jsonPath: .status.phase
-      name: Phase
+    - jsonPath: .spec.gameType
+      name: GameType
       type: string
-    - jsonPath: .status.allocatedNode
-      name: Node
-      type: string
-    - jsonPath: .status.endpoint
-      name: Endpoint
+    - jsonPath: .spec.defaultImage
+      name: DefaultImage
       type: string
     - jsonPath: .metadata.creationTimestamp
       name: Age
@@ -30,8 +27,9 @@ spec:
     name: v1alpha1
     schema:
       openAPIV3Schema:
-        description: GameServer represents a single game server deployment managed
-          by the cube-operator.
+        description: |-
+          GameServerClass provides reusable defaults and placement templates for GameServers.
+          It is cluster-scoped, similar to a Kubernetes StorageClass.
         properties:
           apiVersion:
             description: |-
@@ -51,219 +49,22 @@ spec:
           metadata:
             type: object
           spec:
-            description: GameServerSpec is the desired state of a GameServer.
+            description: GameServerClassSpec defines defaults applied to every GameServer
+              that references this class.
             properties:
-              classRef:
-                description: ClassRef optionally references a GameServerClass that
-                  supplies defaults.
-                properties:
-                  name:
-                    description: |-
-                      Name of the referent.
-                      More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
-                      TODO: Add other useful fields. apiVersion, kind, uid?
-                    type: string
-                type: object
-                x-kubernetes-map-type: atomic
-              game:
-                description: Game defines the game type, image and entrypoint.
-                properties:
-                  args:
-                    description: Args are passed as arguments to the entrypoint.
-                    items:
-                      type: string
-                    type: array
-                  command:
-                    description: Command overrides the container entrypoint.
-                    items:
-                      type: string
-                    type: array
-                  env:
-                    description: Env injects environment variables into the game container.
-                    items:
-                      description: EnvVar represents an environment variable present
-                        in a Container.
-                      properties:
-                        name:
-                          description: Name of the environment variable. Must be a
-                            C_IDENTIFIER.
-                          type: string
-                        value:
-                          description: |-
-                            Variable references $(VAR_NAME) are expanded
-                            using the previously defined environment variables in the container and
-                            any service environment variables. If a variable cannot be resolved,
-                            the reference in the input string will be unchanged. Double $$ are reduced
-                            to a single $, which allows for escaping the $(VAR_NAME) syntax: i.e.
-                            "$$(VAR_NAME)" will produce the string literal "$(VAR_NAME)".
-                            Escaped references will never be expanded, regardless of whether the variable
-                            exists or not.
-                            Defaults to "".
-                          type: string
-                        valueFrom:
-                          description: Source for the environment variable's value.
-                            Cannot be used if value is not empty.
-                          properties:
-                            configMapKeyRef:
-                              description: Selects a key of a ConfigMap.
-                              properties:
-                                key:
-                                  description: The key to select.
-                                  type: string
-                                name:
-                                  description: |-
-                                    Name of the referent.
-                                    More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
-                                    TODO: Add other useful fields. apiVersion, kind, uid?
-                                  type: string
-                                optional:
-                                  description: Specify whether the ConfigMap or its
-                                    key must be defined
-                                  type: boolean
-                              required:
-                              - key
-                              type: object
-                              x-kubernetes-map-type: atomic
-                            fieldRef:
-                              description: |-
-                                Selects a field of the pod: supports metadata.name, metadata.namespace, `metadata.labels['<KEY>']`, `metadata.annotations['<KEY>']`,
-                                spec.nodeName, spec.serviceAccountName, status.hostIP, status.podIP, status.podIPs.
-                              properties:
-                                apiVersion:
-                                  description: Version of the schema the FieldPath
-                                    is written in terms of, defaults to "v1".
-                                  type: string
-                                fieldPath:
-                                  description: Path of the field to select in the
-                                    specified API version.
-                                  type: string
-                              required:
-                              - fieldPath
-                              type: object
-                              x-kubernetes-map-type: atomic
-                            resourceFieldRef:
-                              description: |-
-                                Selects a resource of the container: only resources limits and requests
-                                (limits.cpu, limits.memory, limits.ephemeral-storage, requests.cpu, requests.memory and requests.ephemeral-storage) are currently supported.
-                              properties:
-                                containerName:
-                                  description: 'Container name: required for volumes,
-                                    optional for env vars'
-                                  type: string
-                                divisor:
-                                  anyOf:
-                                  - type: integer
-                                  - type: string
-                                  description: Specifies the output format of the
-                                    exposed resources, defaults to "1"
-                                  pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
-                                  x-kubernetes-int-or-string: true
-                                resource:
-                                  description: 'Required: resource to select'
-                                  type: string
-                              required:
-                              - resource
-                              type: object
-                              x-kubernetes-map-type: atomic
-                            secretKeyRef:
-                              description: Selects a key of a secret in the pod's
-                                namespace
-                              properties:
-                                key:
-                                  description: The key of the secret to select from.  Must
-                                    be a valid secret key.
-                                  type: string
-                                name:
-                                  description: |-
-                                    Name of the referent.
-                                    More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
-                                    TODO: Add other useful fields. apiVersion, kind, uid?
-                                  type: string
-                                optional:
-                                  description: Specify whether the Secret or its key
-                                    must be defined
-                                  type: boolean
-                              required:
-                              - key
-                              type: object
-                              x-kubernetes-map-type: atomic
-                          type: object
-                      required:
-                      - name
-                      type: object
-                    type: array
-                  envFrom:
-                    description: EnvFrom populates environment variables from ConfigMaps
-                      or Secrets.
-                    items:
-                      description: EnvFromSource represents the source of a set of
-                        ConfigMaps
-                      properties:
-                        configMapRef:
-                          description: The ConfigMap to select from
-                          properties:
-                            name:
-                              description: |-
-                                Name of the referent.
-                                More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
-                                TODO: Add other useful fields. apiVersion, kind, uid?
-                              type: string
-                            optional:
-                              description: Specify whether the ConfigMap must be defined
-                              type: boolean
-                          type: object
-                          x-kubernetes-map-type: atomic
-                        prefix:
-                          description: An optional identifier to prepend to each key
-                            in the ConfigMap. Must be a C_IDENTIFIER.
-                          type: string
-                        secretRef:
-                          description: The Secret to select from
-                          properties:
-                            name:
-                              description: |-
-                                Name of the referent.
-                                More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
-                                TODO: Add other useful fields. apiVersion, kind, uid?
-                              type: string
-                            optional:
-                              description: Specify whether the Secret must be defined
-                              type: boolean
-                          type: object
-                          x-kubernetes-map-type: atomic
-                      type: object
-                    type: array
-                  image:
-                    description: Image is the OCI container image. May be inherited
-                      from a GameServerClass.
-                    type: string
-                  type:
-                    description: |-
-                      Type is a short game identifier, e.g. "minecraft", "csgo", "valheim".
-                      Immutable once set.
-                    minLength: 1
-                    type: string
-                required:
-                - type
-                type: object
-              lifecycle:
-                description: Lifecycle controls suspension and deletion behaviour.
-                properties:
-                  deletePolicy:
-                    description: |-
-                      DeletePolicy determines whether PVCs are retained on deletion.
-                      Defaults to Delete.
-                    enum:
-                    - Delete
-                    - Retain
-                    type: string
-                  suspended:
-                    description: Suspended scales the StatefulSet to 0 without deleting
-                      the GameServer.
-                    type: boolean
-                type: object
-              network:
-                description: Network defines Service type and port configuration.
+              defaultCommand:
+                description: DefaultCommand is the entrypoint used when GameServer.spec.game.command
+                  is empty.
+                items:
+                  type: string
+                type: array
+              defaultImage:
+                description: DefaultImage is the OCI image used when GameServer.spec.game.image
+                  is empty.
+                type: string
+              defaultNetwork:
+                description: DefaultNetwork is applied when GameServer.spec.network
+                  is empty.
                 properties:
                   ports:
                     description: Ports are forwarded to the container via a Kubernetes
@@ -308,39 +109,9 @@ spec:
                     - LoadBalancer
                     type: string
                 type: object
-              ownerRef:
-                description: OwnerRef links this server to a Pterodactyl panel user/node.
-                properties:
-                  nodeId:
-                    description: NodeID is the Pterodactyl node identifier.
-                    type: string
-                  serverUid:
-                    description: ServerUID is the Pterodactyl server UUID used by
-                      an external adapter.
-                    type: string
-                  userId:
-                    description: UserID is the Pterodactyl user identifier.
-                    type: string
-                type: object
-              pterodactyl:
-                description: Pterodactyl carries optional Pterodactyl panel metadata.
-                properties:
-                  nodeId:
-                    description: NodeID is the Pterodactyl node ID.
-                    format: int32
-                    type: integer
-                  serverUuid:
-                    description: ServerUUID is the Pterodactyl server UUID.
-                    type: string
-                  synchronized:
-                    description: |-
-                      Synchronized is set to true by an external adapter once it has synced
-                      this server to the Pterodactyl panel.
-                    type: boolean
-                type: object
-              resources:
-                description: Resources are CPU/memory requests and limits for the
-                  game container.
+              defaultResources:
+                description: DefaultResources are applied when GameServer.spec.resources
+                  is not set.
                 properties:
                   claims:
                     description: |-
@@ -394,35 +165,41 @@ spec:
                       More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
                     type: object
                 type: object
-              runtime:
-                description: Runtime controls image pull behaviour.
+              defaultStorage:
+                description: DefaultStorage is applied when GameServer.spec.storage
+                  fields are unset.
                 properties:
-                  imagePullPolicy:
-                    description: PullPolicy describes a policy for if/when to pull
-                      a container image
-                    enum:
-                    - Always
-                    - Never
-                    - IfNotPresent
+                  accessMode:
+                    description: AccessMode defaults to ReadWriteOnce.
                     type: string
-                  imagePullSecrets:
-                    items:
-                      description: |-
-                        LocalObjectReference contains enough information to let you locate the
-                        referenced object inside the same namespace.
-                      properties:
-                        name:
-                          description: |-
-                            Name of the referent.
-                            More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
-                            TODO: Add other useful fields. apiVersion, kind, uid?
-                          type: string
-                      type: object
-                      x-kubernetes-map-type: atomic
-                    type: array
+                  existingClaim:
+                    description: ExistingClaim adopts an existing PVC instead of creating
+                      a new one.
+                    type: string
+                  mountPath:
+                    description: MountPath is the path inside the container. Defaults
+                      to /data.
+                    type: string
+                  size:
+                    anyOf:
+                    - type: integer
+                    - type: string
+                    description: Size is the requested PVC capacity, e.g. "10Gi".
+                    pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                    x-kubernetes-int-or-string: true
+                  storageClassName:
+                    description: StorageClassName overrides the cluster default storage
+                      class.
+                    type: string
                 type: object
-              scheduling:
-                description: Scheduling controls pod placement.
+              gameType:
+                description: GameType is the short game identifier this class targets,
+                  e.g. "minecraft".
+                minLength: 1
+                type: string
+              placementDefaults:
+                description: PlacementDefaults are applied when GameServer.spec.scheduling
+                  is empty.
                 properties:
                   affinity:
                     description: Affinity is a group of affinity scheduling rules.
@@ -1360,149 +1137,10 @@ spec:
                       type: object
                     type: array
                 type: object
-              storage:
-                description: Storage describes the PVC backing the game data directory.
-                properties:
-                  accessMode:
-                    description: AccessMode defaults to ReadWriteOnce.
-                    type: string
-                  existingClaim:
-                    description: ExistingClaim adopts an existing PVC instead of creating
-                      a new one.
-                    type: string
-                  mountPath:
-                    description: MountPath is the path inside the container. Defaults
-                      to /data.
-                    type: string
-                  size:
-                    anyOf:
-                    - type: integer
-                    - type: string
-                    description: Size is the requested PVC capacity, e.g. "10Gi".
-                    pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
-                    x-kubernetes-int-or-string: true
-                  storageClassName:
-                    description: StorageClassName overrides the cluster default storage
-                      class.
-                    type: string
-                type: object
             required:
-            - game
-            type: object
-          status:
-            description: GameServerStatus is the observed state of a GameServer.
-            properties:
-              allocatedNode:
-                description: AllocatedNode is the name of the Kubernetes node running
-                  the server pod.
-                type: string
-              conditions:
-                description: Conditions holds detailed state transitions following
-                  the standard Kubernetes pattern.
-                items:
-                  description: "Condition contains details for one aspect of the current
-                    state of this API Resource.\n---\nThis struct is intended for
-                    direct use as an array at the field path .status.conditions.  For
-                    example,\n\n\n\ttype FooStatus struct{\n\t    // Represents the
-                    observations of a foo's current state.\n\t    // Known .status.conditions.type
-                    are: \"Available\", \"Progressing\", and \"Degraded\"\n\t    //
-                    +patchMergeKey=type\n\t    // +patchStrategy=merge\n\t    // +listType=map\n\t
-                    \   // +listMapKey=type\n\t    Conditions []metav1.Condition `json:\"conditions,omitempty\"
-                    patchStrategy:\"merge\" patchMergeKey:\"type\" protobuf:\"bytes,1,rep,name=conditions\"`\n\n\n\t
-                    \   // other fields\n\t}"
-                  properties:
-                    lastTransitionTime:
-                      description: |-
-                        lastTransitionTime is the last time the condition transitioned from one status to another.
-                        This should be when the underlying condition changed.  If that is not known, then using the time when the API field changed is acceptable.
-                      format: date-time
-                      type: string
-                    message:
-                      description: |-
-                        message is a human readable message indicating details about the transition.
-                        This may be an empty string.
-                      maxLength: 32768
-                      type: string
-                    observedGeneration:
-                      description: |-
-                        observedGeneration represents the .metadata.generation that the condition was set based upon.
-                        For instance, if .metadata.generation is currently 12, but the .status.conditions[x].observedGeneration is 9, the condition is out of date
-                        with respect to the current state of the instance.
-                      format: int64
-                      minimum: 0
-                      type: integer
-                    reason:
-                      description: |-
-                        reason contains a programmatic identifier indicating the reason for the condition's last transition.
-                        Producers of specific condition types may define expected values and meanings for this field,
-                        and whether the values are considered a guaranteed API.
-                        The value should be a CamelCase string.
-                        This field may not be empty.
-                      maxLength: 1024
-                      minLength: 1
-                      pattern: ^[A-Za-z]([A-Za-z0-9_,:]*[A-Za-z0-9_])?$
-                      type: string
-                    status:
-                      description: status of the condition, one of True, False, Unknown.
-                      enum:
-                      - "True"
-                      - "False"
-                      - Unknown
-                      type: string
-                    type:
-                      description: |-
-                        type of condition in CamelCase or in foo.example.com/CamelCase.
-                        ---
-                        Many .condition.type values are consistent across resources like Available, but because arbitrary conditions can be
-                        useful (see .node.status.conditions), the ability to deconflict is important.
-                        The regex it matches is (dns1123SubdomainFmt/)?(qualifiedNameFmt)
-                      maxLength: 316
-                      pattern: ^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])$
-                      type: string
-                  required:
-                  - lastTransitionTime
-                  - message
-                  - reason
-                  - status
-                  - type
-                  type: object
-                type: array
-                x-kubernetes-list-map-keys:
-                - type
-                x-kubernetes-list-type: map
-              endpoint:
-                description: Endpoint is the primary host:port the server is reachable
-                  on from outside the cluster.
-                type: string
-              lastError:
-                description: LastError holds the most recent reconcile error message;
-                  cleared on success.
-                type: string
-              observedGeneration:
-                description: ObservedGeneration is the .metadata.generation last processed
-                  by the controller.
-                format: int64
-                type: integer
-              phase:
-                description: Phase summarises the server lifecycle.
-                enum:
-                - Pending
-                - Provisioning
-                - Starting
-                - Running
-                - Stopping
-                - Failed
-                - Suspended
-                type: string
-              podName:
-                description: PodName is the name of the current game server pod.
-                type: string
-              serviceName:
-                description: ServiceName is the name of the managed Kubernetes Service.
-                type: string
+            - gameType
             type: object
         type: object
     served: true
     storage: true
-    subresources:
-      status: {}
+    subresources: {}
