@@ -33,11 +33,28 @@ import (
 	gslog "github.com/Vladislavvk1337/ptero-wings-operator/gateway/internal/logs"
 )
 
-// wsUpgrader upgrades HTTP connections to WebSocket.
-// CheckOrigin is intentionally permissive here; callers should set
-// AllowedOrigins based on their deployment if needed.
-var wsUpgrader = websocket.Upgrader{
-	CheckOrigin: func(_ *http.Request) bool { return true },
+// wsUpgrader is the default WebSocket upgrader used when no allowed origins are configured.
+// It enforces same-host origin checking (gorilla/websocket default behavior when CheckOrigin is nil).
+var wsUpgrader = websocket.Upgrader{}
+
+// newUpgrader returns a WebSocket upgrader that validates the request origin.
+// allowedOrigins is a set of allowed origins (e.g. "https://panel.example.com").
+// An empty/nil set falls back to same-host origin enforcement.
+func newUpgrader(allowedOrigins map[string]struct{}) websocket.Upgrader {
+	if len(allowedOrigins) == 0 {
+		// Default: require Origin == Host (gorilla default when CheckOrigin is nil).
+		return wsUpgrader
+	}
+	return websocket.Upgrader{
+		CheckOrigin: func(r *http.Request) bool {
+			origin := r.Header.Get("Origin")
+			if origin == "" {
+				return false
+			}
+			_, ok := allowedOrigins[origin]
+			return ok
+		},
+	}
 }
 
 // wsMessage is the JSON envelope used on the WebSocket console channel.
@@ -67,6 +84,9 @@ type ConsoleHandler struct {
 	Namespace string
 	// AuthToken is validated against the token sent in the "auth" WebSocket event.
 	AuthToken string
+	// AllowedOrigins is the set of allowed WebSocket origins (e.g. "https://panel.example.com").
+	// If empty, the gorilla default same-host policy applies.
+	AllowedOrigins map[string]struct{}
 }
 
 // ServeHTTP upgrades to WebSocket and starts bi-directional log + exec streaming.
@@ -77,7 +97,8 @@ func (h *ConsoleHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	conn, err := wsUpgrader.Upgrade(w, r, nil)
+	upgrader := newUpgrader(h.AllowedOrigins)
+	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		slog.Error("ws upgrade failed", "err", err)
 		return

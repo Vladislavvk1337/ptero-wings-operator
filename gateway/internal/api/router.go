@@ -37,6 +37,10 @@ type Config struct {
 	AuthToken string
 	// UseJWT switches to JWT HS256 token validation.
 	UseJWT bool
+	// AllowedOrigins is the set of origins allowed to open WebSocket console connections.
+	// Example: {"https://panel.example.com": {}}
+	// An empty map falls back to same-host origin enforcement (gorilla default).
+	AllowedOrigins map[string]struct{}
 }
 
 // NewRouter returns an http.Handler with all Wings-compatible routes registered.
@@ -61,11 +65,12 @@ func NewRouter(cfg Config) http.Handler {
 	resourcesH := &handlers.ResourcesHandler{K8s: cfg.K8sClient, Namespace: cfg.Namespace}
 	logsH := &handlers.LogsHandler{K8s: cfg.K8sClient, Reader: logReader, Namespace: cfg.Namespace}
 	consoleH := &handlers.ConsoleHandler{
-		K8s:       cfg.K8sClient,
-		Reader:    logReader,
-		Executor:  executor,
-		Namespace: cfg.Namespace,
-		AuthToken: cfg.AuthToken,
+		K8s:            cfg.K8sClient,
+		Reader:         logReader,
+		Executor:       executor,
+		Namespace:      cfg.Namespace,
+		AuthToken:      cfg.AuthToken,
+		AllowedOrigins: cfg.AllowedOrigins,
 	}
 
 	// API routes wrapped with bearer-token authentication.

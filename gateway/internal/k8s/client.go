@@ -20,6 +20,7 @@ package k8s
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 
 	corev1 "k8s.io/api/core/v1"
@@ -128,12 +129,21 @@ func (c *Client) PatchGameServerSpec(ctx context.Context, namespace, name string
 
 // SetSuspended scales the StatefulSet to 0 (suspend) or 1 (resume) by patching lifecycle.suspended.
 func (c *Client) SetSuspended(ctx context.Context, namespace, name string, suspended bool) error {
-	val := "false"
-	if suspended {
-		val = "true"
+	type lifecycleSpec struct {
+		Suspended bool `json:"suspended"`
 	}
-	patch := []byte(fmt.Sprintf(`{"spec":{"lifecycle":{"suspended":%s}}}`, val))
-	return c.PatchGameServerSpec(ctx, namespace, name, patch)
+	type spec struct {
+		Lifecycle lifecycleSpec `json:"lifecycle"`
+	}
+	type patchDoc struct {
+		Spec spec `json:"spec"`
+	}
+	doc := patchDoc{Spec: spec{Lifecycle: lifecycleSpec{Suspended: suspended}}}
+	raw, err := json.Marshal(doc)
+	if err != nil {
+		return fmt.Errorf("marshalling suspended patch: %w", err)
+	}
+	return c.PatchGameServerSpec(ctx, namespace, name, raw)
 }
 
 // ─── Pod helpers ─────────────────────────────────────────────────────────────

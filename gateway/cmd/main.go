@@ -37,6 +37,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 
@@ -68,6 +69,10 @@ func main() {
 	ns := envOrDefault("GAMESERVER_NS", "game-servers")
 	useJWT := os.Getenv("GATEWAY_USE_JWT") == "true"
 
+	// Parse comma-separated list of allowed WebSocket origins, e.g.
+	// GATEWAY_ALLOWED_ORIGINS=https://panel.example.com,https://panel2.example.com
+	allowedOrigins := parseAllowedOrigins(os.Getenv("GATEWAY_ALLOWED_ORIGINS"))
+
 	// Build Kubernetes REST config.
 	restCfg, err := buildRESTConfig(kubeconfig)
 	if err != nil {
@@ -82,10 +87,11 @@ func main() {
 	}
 
 	handler := api.NewRouter(api.Config{
-		K8sClient: k8sClient,
-		Namespace: ns,
-		AuthToken: token,
-		UseJWT:    useJWT,
+		K8sClient:      k8sClient,
+		Namespace:      ns,
+		AuthToken:      token,
+		UseJWT:         useJWT,
+		AllowedOrigins: allowedOrigins,
 	})
 
 	srv := &http.Server{
@@ -146,4 +152,20 @@ func envOrDefault(key, def string) string {
 		return v
 	}
 	return def
+}
+
+// parseAllowedOrigins splits a comma-separated list of origins into a set.
+// Returns nil (empty map) when s is blank, which triggers same-host enforcement.
+func parseAllowedOrigins(s string) map[string]struct{} {
+	if s == "" {
+		return nil
+	}
+	set := make(map[string]struct{})
+	for _, origin := range strings.Split(s, ",") {
+		o := strings.TrimSpace(origin)
+		if o != "" {
+			set[o] = struct{}{}
+		}
+	}
+	return set
 }
