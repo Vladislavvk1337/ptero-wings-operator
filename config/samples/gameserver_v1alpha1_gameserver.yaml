@@ -1,0 +1,33 @@
+apiVersion: gameserver.pterodactyl.io/v1alpha1
+kind: GameServer
+metadata:
+  labels:
+    app.kubernetes.io/name: gameserver
+    app.kubernetes.io/instance: gameserver-sample
+    app.kubernetes.io/part-of: ptero-wings-operator
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: ptero-wings-operator
+  name: gameserver-sample
+spec:
+  image: itzg/minecraft-server:latest
+  imagePullPolicy: IfNotPresent
+  replicas: 1
+  ports:
+    - name: game
+      protocol: TCP
+      containerPort: 25565
+    - name: query
+      protocol: UDP
+      containerPort: 25565
+  env:
+    - name: EULA
+      value: "TRUE"
+    - name: TYPE
+      value: VANILLA
+  resources:
+    requests:
+      cpu: "500m"
+      memory: "1Gi"
+    limits:
+      cpu: "2"
+      memory: "2Gi"
