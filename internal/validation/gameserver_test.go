@@ -137,7 +137,7 @@ func TestValidateEffective_InvalidStorageBackupPolicy(t *testing.T) {
 	}
 }
 
-func TestValidateEffective_OnlyAlwaysRestartPolicySupported(t *testing.T) {
+func TestValidateEffective_OnlyAlwaysRestartPolicyIsSupported(t *testing.T) {
 	gs := newValid()
 	gs.Spec.Lifecycle.RestartPolicy = corev1.RestartPolicyOnFailure
 	if err := validation.ValidateEffective(gs); err == nil {
