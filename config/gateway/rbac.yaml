@@ -1,0 +1,54 @@
+---
+# ServiceAccount used by the gateway pod.
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: ptero-wings-gateway
+  namespace: ptero-system
+  labels:
+    app.kubernetes.io/name: ptero-wings-gateway
+    app.kubernetes.io/part-of: ptero-wings-operator
+---
+# ClusterRole grants the gateway read/write access to GameServer CRs
+# and read access to Pods (for log streaming and exec).
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: ptero-wings-gateway
+  labels:
+    app.kubernetes.io/name: ptero-wings-gateway
+    app.kubernetes.io/part-of: ptero-wings-operator
+rules:
+  # GameServer CRDs — full CRUD so the gateway can create/delete/patch servers.
+  - apiGroups: ["gameserver.pterodactyl.io"]
+    resources: ["gameservers"]
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+  - apiGroups: ["gameserver.pterodactyl.io"]
+    resources: ["gameservers/status"]
+    verbs: ["get"]
+  # Pods — needed to resolve pod names, stream logs and run exec.
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: [""]
+    resources: ["pods/log"]
+    verbs: ["get"]
+  - apiGroups: [""]
+    resources: ["pods/exec"]
+    verbs: ["create"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: ptero-wings-gateway
+  labels:
+    app.kubernetes.io/name: ptero-wings-gateway
+    app.kubernetes.io/part-of: ptero-wings-operator
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: ptero-wings-gateway
+subjects:
+  - kind: ServiceAccount
+    name: ptero-wings-gateway
+    namespace: ptero-system

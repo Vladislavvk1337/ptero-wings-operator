@@ -1,0 +1,101 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ptero-wings-gateway
+  namespace: ptero-system
+  labels:
+    app.kubernetes.io/name: ptero-wings-gateway
+    app.kubernetes.io/component: gateway
+    app.kubernetes.io/part-of: ptero-wings-operator
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: ptero-wings-gateway
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: ptero-wings-gateway
+        app.kubernetes.io/component: gateway
+        app.kubernetes.io/part-of: ptero-wings-operator
+    spec:
+      serviceAccountName: ptero-wings-gateway
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: gateway
+          image: ghcr.io/vladislavvk1337/ptero-wings-gateway:latest
+          imagePullPolicy: IfNotPresent
+          args:
+            - --tls-cert=/tls/tls.crt
+            - --tls-key=/tls/tls.key
+          env:
+            - name: GATEWAY_ADDR
+              value: ":8090"
+            - name: GAMESERVER_NS
+              value: "game-servers"
+            - name: GATEWAY_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: ptero-wings-gateway-token
+                  key: token
+            # Set to "true" to validate tokens as HS256 JWTs instead of static tokens.
+            - name: GATEWAY_USE_JWT
+              value: "false"
+          ports:
+            - name: https
+              containerPort: 8090
+              protocol: TCP
+          volumeMounts:
+            - name: tls
+              mountPath: /tls
+              readOnly: true
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8090
+              scheme: HTTPS
+            initialDelaySeconds: 10
+            periodSeconds: 20
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 8090
+              scheme: HTTPS
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 500m
+              memory: 256Mi
+      volumes:
+        - name: tls
+          secret:
+            secretName: ptero-wings-gateway-tls
+      terminationGracePeriodSeconds: 30
+---
+# Secret placeholder — replace token value before deploying.
+# Example: kubectl create secret generic ptero-wings-gateway-token \
+#            --from-literal=token="<your-secret-token>" -n ptero-system
+apiVersion: v1
+kind: Secret
+metadata:
+  name: ptero-wings-gateway-token
+  namespace: ptero-system
+  labels:
+    app.kubernetes.io/name: ptero-wings-gateway
+    app.kubernetes.io/part-of: ptero-wings-operator
+type: Opaque
+data:
+  # Base64 encoded placeholder — REPLACE before deploying.
+  token: Y2hhbmdlbWU=  # "changeme"
