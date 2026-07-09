@@ -1367,8 +1367,9 @@ spec:
                     description: AccessMode defaults to ReadWriteOnce.
                     type: string
                   existingClaim:
-                    description: ExistingClaim adopts an existing PVC instead of creating
-                      a new one.
+                    description: |-
+                      ExistingClaim is deprecated and not supported by the operator.
+                      Every GameServer gets its own managed PVC.
                     type: string
                   mountPath:
                     description: MountPath is the path inside the container. Defaults

@@ -25,11 +25,9 @@ import (
 	"github.com/Vladislavvk1337/ptero-wings-operator/controllers/helpers"
 )
 
-// PVC builds a PersistentVolumeClaim for game data storage.
-// Returns nil when no storage is requested or when an existing claim is referenced
-// (in that case the StatefulSet references it directly without creating a new PVC).
+// PVC builds a dedicated PersistentVolumeClaim for game data storage.
 func PVC(gs *v1alpha1.GameServer) *corev1.PersistentVolumeClaim {
-	if !helpers.NeedsStorage(gs) || gs.Spec.Storage.ExistingClaim != "" {
+	if !helpers.NeedsStorage(gs) {
 		return nil
 	}
 

@@ -13,6 +13,9 @@ External systems (e.g. a Pterodactyl panel) configure the gateway as a Wings nod
 
 ## Architecture
 
+Detailed architecture and reconciliation notes are available in
+[`ARCHITECTURE.md`](./ARCHITECTURE.md).
+
 ```
 ┌────────────────────────────────────────────────────────────────┐
 │                   EXTERNAL (out of scope)                       │
@@ -212,6 +215,9 @@ The panel will call the gateway's `/api/` endpoints as if it were a real Wings d
 | `lifecycle.deletePolicy` | string | `Delete` | `Delete` or `Retain` PVCs on deletion |
 | `classRef.name` | string | | Reference to a `GameServerClass` for defaults |
 
+> `storage.existingClaim` is deprecated and rejected by validation.  
+> The operator always manages one dedicated PVC per `GameServer`.
+
 ## GameServer Status
 
 | Field | Description |
@@ -294,3 +300,10 @@ ptero-wings-operator/
     └── gateway/                   # Gateway Deployment + Service + Ingress + RBAC
 ```
 
+## Examples
+
+Example manifests are available under [`examples/`](./examples):
+
+- `examples/gameserverclass.yaml`
+- `examples/gameserver.yaml`
+- `examples/gateway/` (RBAC, Deployment, Service, Ingress)

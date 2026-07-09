@@ -40,7 +40,7 @@ func DefaultMountPath(spec v1alpha1.StorageSpec) string {
 
 // NeedsStorage returns true when the GameServer requires a PVC.
 func NeedsStorage(gs *v1alpha1.GameServer) bool {
-	return !gs.Spec.Storage.Size.IsZero() || gs.Spec.Storage.ExistingClaim != ""
+	return true
 }
 
 // NeedsService returns true when the GameServer needs a Kubernetes Service.

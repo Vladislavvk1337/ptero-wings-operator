@@ -182,12 +182,8 @@ func TestDefaultPortProtocol(t *testing.T) {
 
 func TestNeedsStorage(t *testing.T) {
 	gs := newGS("gs")
-	if helpers.NeedsStorage(gs) {
-		t.Error("empty storage spec should not require PVC")
-	}
-	gs.Spec.Storage.Size = resource.MustParse("1Gi")
 	if !helpers.NeedsStorage(gs) {
-		t.Error("non-zero size should require PVC")
+		t.Error("every GameServer should require a dedicated PVC")
 	}
 }
 

@@ -1,0 +1,55 @@
+apiVersion: gameserver.pterodactyl.io/v1alpha1
+kind: GameServer
+metadata:
+  name: minecraft-survival
+  namespace: game-servers
+  labels:
+    app.kubernetes.io/part-of: ptero-wings-operator
+spec:
+  classRef:
+    name: minecraft-vanilla
+  ownerRef:
+    userId: "user-42"
+    nodeId: "node-1"
+    serverUid: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+  game:
+    type: minecraft
+    image: itzg/minecraft-server:latest
+    env:
+      - name: EULA
+        value: "TRUE"
+      - name: TYPE
+        value: VANILLA
+      - name: MEMORY
+        value: "1536M"
+  runtime:
+    imagePullPolicy: IfNotPresent
+  resources:
+    requests:
+      cpu: "500m"
+      memory: "1Gi"
+    limits:
+      cpu: "2"
+      memory: "2Gi"
+  storage:
+    size: 10Gi
+    mountPath: /data
+  network:
+    serviceType: NodePort
+    ports:
+      - name: game
+        protocol: TCP
+        containerPort: 25565
+      - name: query
+        protocol: UDP
+        containerPort: 25565
+  scheduling:
+    nodeSelector:
+      kubernetes.io/os: linux
+  lifecycle:
+    suspended: false
+    deletePolicy: Retain
+  pterodactyl:
+    serverUuid: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+    nodeId: 1
+    synchronized: false
