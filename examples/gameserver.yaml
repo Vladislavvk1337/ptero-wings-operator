@@ -4,7 +4,7 @@ metadata:
   name: minecraft-survival
   namespace: game-servers
   labels:
-    app.kubernetes.io/part-of: cube-operator
+    app.kubernetes.io/part-of: ptero-wings-operator
 spec:
   classRef:
     name: minecraft-vanilla

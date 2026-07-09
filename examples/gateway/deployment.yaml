@@ -96,6 +96,3 @@ metadata:
     app.kubernetes.io/name: ptero-wings-gateway
     app.kubernetes.io/part-of: ptero-wings-operator
 type: Opaque
-data:
-  # Base64 encoded placeholder — REPLACE before deploying.
-  token: Y2hhbmdlbWU=  # "changeme"
