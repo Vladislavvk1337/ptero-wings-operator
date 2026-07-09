@@ -51,6 +51,7 @@ spec:
       kubernetes.io/os: linux
   lifecycle:
     suspended: false
+    # Applied to the StatefulSet pod template; currently only Always is supported.
     restartPolicy: Always
   protection:
     snapshotBeforeDelete: true
