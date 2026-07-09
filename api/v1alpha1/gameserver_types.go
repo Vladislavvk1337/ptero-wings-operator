@@ -58,6 +58,19 @@ const (
 	DeletePolicyRetain DeletePolicy = "Retain"
 )
 
+// BackupPolicy controls optional pre-delete storage protection integration.
+// +kubebuilder:validation:Enum=None;Snapshot;Backup
+type BackupPolicy string
+
+const (
+	// BackupPolicyNone does not trigger any storage protection action.
+	BackupPolicyNone BackupPolicy = "None"
+	// BackupPolicySnapshot requests a snapshot action before deletion.
+	BackupPolicySnapshot BackupPolicy = "Snapshot"
+	// BackupPolicyBackup requests a backup action before deletion.
+	BackupPolicyBackup BackupPolicy = "Backup"
+)
+
 // GameServerOwnerRef links the server to a Pterodactyl panel user/node.
 // This is purely informational; the operator never calls the panel API.
 type GameServerOwnerRef struct {
@@ -132,6 +145,21 @@ type StorageSpec struct {
 	// Every GameServer gets its own managed PVC.
 	// +optional
 	ExistingClaim string `json:"existingClaim,omitempty"`
+
+	// DeletePolicy controls PVC retention for this GameServer.
+	// When set, this field takes precedence over spec.lifecycle.deletePolicy.
+	// +optional
+	DeletePolicy DeletePolicy `json:"deletePolicy,omitempty"`
+
+	// BackupPolicy optionally requests storage protection integration before delete.
+	// Supported actions are None, Snapshot, and Backup.
+	// +optional
+	BackupPolicy BackupPolicy `json:"backupPolicy,omitempty"`
+
+	// RestoreFrom is an optional restore source identifier used by external tooling.
+	// The operator stores it as intent metadata and does not apply restore logic itself.
+	// +optional
+	RestoreFrom string `json:"restoreFrom,omitempty"`
 }
 
 // PortSpec exposes a single game server port via the managed Service.
@@ -187,8 +215,36 @@ type LifecycleSpec struct {
 
 	// DeletePolicy determines whether PVCs are retained on deletion.
 	// Defaults to Delete.
+	// Deprecated: prefer spec.storage.deletePolicy.
 	// +optional
 	DeletePolicy DeletePolicy `json:"deletePolicy,omitempty"`
+
+	// RestartPolicy controls pod restart behavior for the game container.
+	// +optional
+	// +kubebuilder:validation:Enum=Always;OnFailure;Never
+	RestartPolicy corev1.RestartPolicy `json:"restartPolicy,omitempty"`
+
+	// TTLSecondsAfterFinished is an optional retention TTL for completed workloads.
+	// +optional
+	TTLSecondsAfterFinished *int64 `json:"ttlSecondsAfterFinished,omitempty"`
+}
+
+// ProtectionSpec controls optional pre-delete safeguards.
+type ProtectionSpec struct {
+	// BackupBeforeDelete requests a backup action before finalizer cleanup.
+	// +optional
+	BackupBeforeDelete bool `json:"backupBeforeDelete,omitempty"`
+
+	// SnapshotBeforeDelete requests a snapshot action before finalizer cleanup.
+	// +optional
+	SnapshotBeforeDelete bool `json:"snapshotBeforeDelete,omitempty"`
+}
+
+// ExternalSpec carries metadata from external systems.
+type ExternalSpec struct {
+	// ExternalServerID links this GameServer to an external panel/server identifier.
+	// +optional
+	ExternalServerID string `json:"externalServerId,omitempty"`
 }
 
 // PterodactylSpec carries optional Pterodactyl panel metadata.
@@ -245,6 +301,14 @@ type GameServerSpec struct {
 	// +optional
 	Lifecycle LifecycleSpec `json:"lifecycle,omitempty"`
 
+	// Protection controls optional pre-delete backup/snapshot safeguards.
+	// +optional
+	Protection ProtectionSpec `json:"protection,omitempty"`
+
+	// External carries external-system metadata, for example panel server IDs.
+	// +optional
+	External ExternalSpec `json:"external,omitempty"`
+
 	// Pterodactyl carries optional Pterodactyl panel metadata.
 	// +optional
 	Pterodactyl *PterodactylSpec `json:"pterodactyl,omitempty"`
@@ -278,9 +342,17 @@ type GameServerStatus struct {
 	// +optional
 	PodName string `json:"podName,omitempty"`
 
+	// ContainerName is the name of the game server container within the pod.
+	// +optional
+	ContainerName string `json:"containerName,omitempty"`
+
 	// ServiceName is the name of the managed Kubernetes Service.
 	// +optional
 	ServiceName string `json:"serviceName,omitempty"`
+
+	// PVCName is the name of the dedicated PVC managed for this GameServer.
+	// +optional
+	PVCName string `json:"pvcName,omitempty"`
 
 	// LastError holds the most recent reconcile error message; cleared on success.
 	// +optional

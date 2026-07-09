@@ -240,6 +240,10 @@ func DefaultGameServerFrom(req *CreateServerRequest, namespace string) *v1alpha1
 			Runtime: v1alpha1.RuntimeSpec{
 				ImagePullPolicy: corev1.PullIfNotPresent,
 			},
+			Storage: v1alpha1.StorageSpec{
+				DeletePolicy: v1alpha1.DeletePolicyRetain,
+				BackupPolicy: v1alpha1.BackupPolicyNone,
+			},
 			Lifecycle: v1alpha1.LifecycleSpec{
 				DeletePolicy: v1alpha1.DeletePolicyRetain,
 			},
@@ -265,10 +269,8 @@ func DefaultGameServerFrom(req *CreateServerRequest, namespace string) *v1alpha1
 
 	// Storage
 	if req.DiskMB > 0 {
-		gs.Spec.Storage = v1alpha1.StorageSpec{
-			Size:      *resource.NewQuantity(int64(req.DiskMB)*1024*1024, resource.BinarySI),
-			MountPath: "/data",
-		}
+		gs.Spec.Storage.Size = *resource.NewQuantity(int64(req.DiskMB)*1024*1024, resource.BinarySI)
+		gs.Spec.Storage.MountPath = "/data"
 	}
 
 	// Ports

@@ -110,9 +110,12 @@ func TestMergeWithClass_FillsStorageFromClass(t *testing.T) {
 	class := &v1alpha1.GameServerClass{
 		Spec: v1alpha1.GameServerClassSpec{
 			DefaultStorage: v1alpha1.StorageSpec{
-				Size:       resource.MustParse("10Gi"),
-				AccessMode: corev1.ReadWriteOnce,
-				MountPath:  "/data",
+				Size:         resource.MustParse("10Gi"),
+				AccessMode:   corev1.ReadWriteOnce,
+				MountPath:    "/data",
+				DeletePolicy: v1alpha1.DeletePolicyRetain,
+				BackupPolicy: v1alpha1.BackupPolicySnapshot,
+				RestoreFrom:  "backup://example",
 			},
 		},
 	}
@@ -122,6 +125,15 @@ func TestMergeWithClass_FillsStorageFromClass(t *testing.T) {
 	}
 	if merged.Spec.Storage.MountPath != "/data" {
 		t.Error("mount path not filled from class")
+	}
+	if merged.Spec.Storage.DeletePolicy != v1alpha1.DeletePolicyRetain {
+		t.Error("delete policy not filled from class")
+	}
+	if merged.Spec.Storage.BackupPolicy != v1alpha1.BackupPolicySnapshot {
+		t.Error("backup policy not filled from class")
+	}
+	if merged.Spec.Storage.RestoreFrom != "backup://example" {
+		t.Error("restoreFrom not filled from class")
 	}
 }
 
@@ -195,5 +207,22 @@ func TestNeedsService(t *testing.T) {
 	gs.Spec.Network.Ports = []v1alpha1.PortSpec{{Name: "game", ContainerPort: 25565}}
 	if !helpers.NeedsService(gs) {
 		t.Error("with ports should need a Service")
+	}
+}
+
+func TestEffectiveDeletePolicy(t *testing.T) {
+	gs := newGS("gs")
+	if got := helpers.EffectiveDeletePolicy(gs); got != v1alpha1.DeletePolicyDelete {
+		t.Errorf("default delete policy = %q, want %q", got, v1alpha1.DeletePolicyDelete)
+	}
+
+	gs.Spec.Lifecycle.DeletePolicy = v1alpha1.DeletePolicyRetain
+	if got := helpers.EffectiveDeletePolicy(gs); got != v1alpha1.DeletePolicyRetain {
+		t.Errorf("lifecycle policy = %q, want retain", got)
+	}
+
+	gs.Spec.Storage.DeletePolicy = v1alpha1.DeletePolicyDelete
+	if got := helpers.EffectiveDeletePolicy(gs); got != v1alpha1.DeletePolicyDelete {
+		t.Errorf("storage policy precedence not applied, got %q", got)
 	}
 }

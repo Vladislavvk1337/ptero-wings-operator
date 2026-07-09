@@ -40,6 +40,8 @@ func (r *GameServerReconciler) syncStatus(ctx context.Context, gs *v1alpha1.Game
 
 	gs.Status.ObservedGeneration = gs.Generation
 	gs.Status.LastError = ""
+	gs.Status.ContainerName = "gameserver"
+	gs.Status.PVCName = helpers.PVCName(gs)
 
 	// Read StatefulSet (ignore NotFound — it may not exist yet on first run).
 	ss := &appsv1.StatefulSet{}

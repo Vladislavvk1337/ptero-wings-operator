@@ -34,6 +34,9 @@ spec:
   storage:
     size: 10Gi
     mountPath: /data
+    deletePolicy: Retain
+    backupPolicy: Snapshot
+    restoreFrom: ""
   network:
     serviceType: NodePort
     ports:
@@ -48,7 +51,11 @@ spec:
       kubernetes.io/os: linux
   lifecycle:
     suspended: false
-    deletePolicy: Retain
+    restartPolicy: Always
+  protection:
+    snapshotBeforeDelete: true
+  external:
+    externalServerId: "srv-42"
   pterodactyl:
     serverUuid: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
     nodeId: 1

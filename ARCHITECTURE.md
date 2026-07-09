@@ -64,6 +64,8 @@ sequenceDiagram
   3. fallback `1Gi`
 - `storageClassName` is optional and can be set directly in `GameServer.spec.storage.storageClassName` or inherited from class defaults.
 - Stale PVCs with the same GameServer label are removed during reconciliation, keeping a single managed PVC.
+- Optional protection hooks: on delete, the finalizer can annotate the managed PVC with snapshot/backup request timestamps when
+  `spec.protection.*BeforeDelete` or `spec.storage.backupPolicy` is enabled. External Longhorn/CSI automation can consume these annotations.
 
 ## Gateway integration
 
