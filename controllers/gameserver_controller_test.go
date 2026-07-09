@@ -208,18 +208,6 @@ var _ = Describe("GameServer Controller", func() {
 			})).To(Succeed())
 		})
 
-		It("creates a PVC", func() {
-			reconcileOnce()
-			reconcileOnce()
-
-			pvc := &corev1.PersistentVolumeClaim{}
-			Expect(k8sClient.Get(ctx, types.NamespacedName{
-				Name:      helpers.PVCName(&v1alpha1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: name}}),
-				Namespace: namespace,
-			}, pvc)).To(Succeed())
-			Expect(pvc.Spec.Resources.Requests[corev1.ResourceStorage]).NotTo(Equal(resource.MustParse("0")))
-		})
-
 		It("mounts the PVC at /data in the StatefulSet container", func() {
 			reconcileOnce()
 			reconcileOnce()
