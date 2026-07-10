@@ -73,7 +73,10 @@ func (h *ConsoleHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		_ = conn.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.ClosePolicyViolation, "auth failed"))
 		return
 	}
-	var wg sync.WaitGroup
+	var (
+		wg      sync.WaitGroup
+		writeMu sync.Mutex
+	)
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
@@ -84,7 +87,7 @@ func (h *ConsoleHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			for {
 				n, readErr := pr.Read(buf)
 				if n > 0 {
-					h.sendEvent(conn, "console output", string(buf[:n]))
+					h.sendEvent(conn, &writeMu, "console output", string(buf[:n]))
 				}
 				if readErr != nil {
 					return
@@ -114,7 +117,7 @@ func (h *ConsoleHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 					slog.Warn("exec error", "cmd", command, "err", execErr)
 				}
 				if out.Len() > 0 {
-					h.sendEvent(conn, "console output", out.String())
+					h.sendEvent(conn, &writeMu, "console output", out.String())
 				}
 			}()
 		}
@@ -134,11 +137,13 @@ func (h *ConsoleHandler) waitForAuth(conn *websocket.Conn) bool {
 	return msg.Args[0] == h.AuthToken
 }
 
-func (h *ConsoleHandler) sendEvent(conn *websocket.Conn, event string, args ...string) {
+func (h *ConsoleHandler) sendEvent(conn *websocket.Conn, writeMu *sync.Mutex, event string, args ...string) {
 	data, err := json.Marshal(wsMessage{Event: event, Args: args})
 	if err != nil {
 		return
 	}
+	writeMu.Lock()
+	defer writeMu.Unlock()
 	if writeErr := conn.WriteMessage(websocket.TextMessage, data); writeErr != nil {
 		slog.Debug("ws write error", "err", writeErr, "event", fmt.Sprintf("%q", event))
 	}

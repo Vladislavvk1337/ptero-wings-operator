@@ -6,7 +6,7 @@ spec:
   gameType: minecraft
   defaultImage: itzg/minecraft-server:latest
   defaultStartup:
-    raw: java -Xmx{{SERVER_MEMORY}}M -jar {{SERVER_JARFILE}}
+    raw: java -Xmx{{SERVER_MEMORY}}M -jar "{{SERVER_JARFILE}}"
     variables:
       SERVER_MEMORY: "1024"
       SERVER_JARFILE: server.jar

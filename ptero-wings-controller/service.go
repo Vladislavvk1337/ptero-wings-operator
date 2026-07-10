@@ -17,7 +17,6 @@ limitations under the License.
 package controller
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 	"io"
@@ -190,7 +189,7 @@ func (s *EmbeddedService) ExecCommand(ctx context.Context, id, command string, s
 	if err != nil {
 		return err
 	}
-	return s.exec.ExecStream(ctx, s.namespace, pod.Name, []string{"/bin/sh", "-c", command}, bytes.NewBufferString(command+"\n"), stdout, stderr)
+	return s.exec.ExecStream(ctx, s.namespace, pod.Name, []string{"/bin/sh", "-c", command}, nil, stdout, stderr)
 }
 
 func (s *EmbeddedService) gameServerFromRequest(req *CreateServerRequest) (*v1alpha1.GameServer, error) {

@@ -22,3 +22,20 @@ func TestStartupMapperResolve(t *testing.T) {
 		t.Fatalf("args = %v", args)
 	}
 }
+
+func TestStartupMapperResolveErrors(t *testing.T) {
+	mapper := StartupMapper{}
+	if _, _, err := mapper.Resolve(`java "unterminated`, nil, nil); err == nil {
+		t.Fatal("expected unterminated quote error")
+	}
+	if _, _, err := mapper.Resolve("cmd "+"\\", nil, nil); err == nil {
+		t.Fatal("expected unterminated escape error")
+	}
+	command, args, err := mapper.Resolve("", nil, nil)
+	if err != nil {
+		t.Fatalf("empty startup returned error: %v", err)
+	}
+	if command != nil || args != nil {
+		t.Fatalf("expected nil command/args for empty startup, got %v %v", command, args)
+	}
+}

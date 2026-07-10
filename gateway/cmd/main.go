@@ -136,9 +136,11 @@ func parseAllowedOrigins(s string) map[string]struct{} {
 	}
 	set := make(map[string]struct{})
 	for _, origin := range strings.Split(s, ",") {
-		if origin = strings.TrimSpace(origin); origin != "" {
-			set[origin] = struct{}{}
+		trimmed := strings.TrimSpace(origin)
+		if trimmed == "" {
+			continue
 		}
+		set[trimmed] = struct{}{}
 	}
 	return set
 }

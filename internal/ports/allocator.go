@@ -60,6 +60,9 @@ func (a *ClusterAllocator) Allocate(ctx context.Context, gs *v1alpha1.GameServer
 		return ports, nil
 	}
 
+	// Count is modeled as the number of ports after StartPort, so the reserved
+	// range size always includes the first port itself. Example: start=30005,count=5
+	// reserves 30005-30010.
 	rangeSize := int(allocation.Count) + 1
 	if rangeSize <= 0 {
 		rangeSize = len(ports)
