@@ -22,23 +22,31 @@ import (
 	v1alpha1 "github.com/Vladislavvk1337/ptero-wings-operator/api/v1alpha1"
 )
 
-// MergeWithClass returns a deep copy of gs with fields filled in from class wherever
-// they are unset. If class is nil, a plain deep copy is returned.
 func MergeWithClass(gs *v1alpha1.GameServer, class *v1alpha1.GameServerClass) *v1alpha1.GameServer {
 	merged := gs.DeepCopy()
 	if class == nil {
 		return merged
 	}
 
-	// Game image and command
 	if merged.Spec.Game.Image == "" {
 		merged.Spec.Game.Image = class.Spec.DefaultImage
 	}
 	if len(merged.Spec.Game.Command) == 0 && len(class.Spec.DefaultCommand) > 0 {
 		merged.Spec.Game.Command = append([]string(nil), class.Spec.DefaultCommand...)
 	}
+	if len(merged.Spec.Game.Args) == 0 && len(class.Spec.DefaultArgs) > 0 {
+		merged.Spec.Game.Args = append([]string(nil), class.Spec.DefaultArgs...)
+	}
+	if merged.Spec.Runtime.Startup == nil && class.Spec.DefaultStartup != nil {
+		merged.Spec.Runtime.Startup = &v1alpha1.StartupSpec{Raw: class.Spec.DefaultStartup.Raw}
+		if len(class.Spec.DefaultStartup.Variables) > 0 {
+			merged.Spec.Runtime.Startup.Variables = make(map[string]string, len(class.Spec.DefaultStartup.Variables))
+			for key, value := range class.Spec.DefaultStartup.Variables {
+				merged.Spec.Runtime.Startup.Variables[key] = value
+			}
+		}
+	}
 
-	// Resources
 	if merged.Spec.Resources.Requests == nil && class.Spec.DefaultResources.Requests != nil {
 		merged.Spec.Resources.Requests = class.Spec.DefaultResources.Requests.DeepCopy()
 	}
@@ -46,7 +54,6 @@ func MergeWithClass(gs *v1alpha1.GameServer, class *v1alpha1.GameServerClass) *v
 		merged.Spec.Resources.Limits = class.Spec.DefaultResources.Limits.DeepCopy()
 	}
 
-	// Storage
 	if merged.Spec.Storage.Size.IsZero() && !class.Spec.DefaultStorage.Size.IsZero() {
 		merged.Spec.Storage.Size = class.Spec.DefaultStorage.Size.DeepCopy()
 	}
@@ -70,23 +77,28 @@ func MergeWithClass(gs *v1alpha1.GameServer, class *v1alpha1.GameServerClass) *v
 		merged.Spec.Storage.RestoreFrom = class.Spec.DefaultStorage.RestoreFrom
 	}
 
-	// Network
 	if len(merged.Spec.Network.Ports) == 0 && len(class.Spec.DefaultNetwork.Ports) > 0 {
 		merged.Spec.Network.Ports = append([]v1alpha1.PortSpec(nil), class.Spec.DefaultNetwork.Ports...)
 	}
 	if merged.Spec.Network.ServiceType == "" {
 		merged.Spec.Network.ServiceType = class.Spec.DefaultNetwork.ServiceType
 	}
+	if merged.Spec.Network.NodePortAllocation == nil && class.Spec.DefaultNetwork.NodePortAllocation != nil {
+		copy := *class.Spec.DefaultNetwork.NodePortAllocation
+		merged.Spec.Network.NodePortAllocation = &copy
+	}
 
-	// Scheduling
 	if len(merged.Spec.Scheduling.NodeSelector) == 0 && len(class.Spec.PlacementDefaults.NodeSelector) > 0 {
-		merged.Spec.Scheduling.NodeSelector = make(map[string]string)
-		for k, v := range class.Spec.PlacementDefaults.NodeSelector {
-			merged.Spec.Scheduling.NodeSelector[k] = v
+		merged.Spec.Scheduling.NodeSelector = make(map[string]string, len(class.Spec.PlacementDefaults.NodeSelector))
+		for key, value := range class.Spec.PlacementDefaults.NodeSelector {
+			merged.Spec.Scheduling.NodeSelector[key] = value
 		}
 	}
 	if len(merged.Spec.Scheduling.Tolerations) == 0 && len(class.Spec.PlacementDefaults.Tolerations) > 0 {
 		merged.Spec.Scheduling.Tolerations = append([]corev1.Toleration(nil), class.Spec.PlacementDefaults.Tolerations...)
+	}
+	if merged.Spec.Scheduling.Affinity == nil && class.Spec.PlacementDefaults.Affinity != nil {
+		merged.Spec.Scheduling.Affinity = class.Spec.PlacementDefaults.Affinity.DeepCopy()
 	}
 
 	return merged

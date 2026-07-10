@@ -34,6 +34,7 @@ import (
 	"github.com/Vladislavvk1337/ptero-wings-operator/controllers/helpers"
 	portsalloc "github.com/Vladislavvk1337/ptero-wings-operator/internal/ports"
 	"github.com/Vladislavvk1337/ptero-wings-operator/internal/validation"
+	wingscontroller "github.com/Vladislavvk1337/ptero-wings-operator/ptero-wings-controller"
 )
 
 // Finalizer is added to every GameServer to ensure cleanup runs before deletion.
@@ -113,6 +114,10 @@ func (r *GameServerReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 
 	// 6. Merge class defaults → effective spec
 	effective := helpers.MergeWithClass(gs, class)
+
+	if err := wingscontroller.ApplyStartup(effective, wingscontroller.StartupMapper{}); err != nil {
+		return ctrl.Result{}, r.failWith(ctx, gs, fmt.Errorf("startup mapping: %w", err))
+	}
 
 	// 7. Validate effective spec
 	if err := validation.ValidateEffective(effective); err != nil {

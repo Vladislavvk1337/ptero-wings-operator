@@ -21,35 +21,16 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// GameServerClassSpec defines defaults applied to every GameServer that references this class.
 type GameServerClassSpec struct {
-	// GameType is the short game identifier this class targets, e.g. "minecraft".
-	// +kubebuilder:validation:MinLength=1
-	GameType string `json:"gameType"`
-
-	// DefaultImage is the OCI image used when GameServer.spec.game.image is empty.
-	// +optional
-	DefaultImage string `json:"defaultImage,omitempty"`
-
-	// DefaultCommand is the entrypoint used when GameServer.spec.game.command is empty.
-	// +optional
-	DefaultCommand []string `json:"defaultCommand,omitempty"`
-
-	// DefaultResources are applied when GameServer.spec.resources is not set.
-	// +optional
-	DefaultResources corev1.ResourceRequirements `json:"defaultResources,omitempty"`
-
-	// DefaultStorage is applied when GameServer.spec.storage fields are unset.
-	// +optional
-	DefaultStorage StorageSpec `json:"defaultStorage,omitempty"`
-
-	// DefaultNetwork is applied when GameServer.spec.network is empty.
-	// +optional
-	DefaultNetwork NetworkSpec `json:"defaultNetwork,omitempty"`
-
-	// PlacementDefaults are applied when GameServer.spec.scheduling is empty.
-	// +optional
-	PlacementDefaults SchedulingSpec `json:"placementDefaults,omitempty"`
+	GameType          string                     `json:"gameType"`
+	DefaultImage      string                     `json:"defaultImage,omitempty"`
+	DefaultCommand    []string                   `json:"defaultCommand,omitempty"`
+	DefaultArgs       []string                   `json:"defaultArgs,omitempty"`
+	DefaultStartup    *StartupSpec               `json:"defaultStartup,omitempty"`
+	DefaultResources  corev1.ResourceRequirements `json:"defaultResources,omitempty"`
+	DefaultStorage    StorageSpec                `json:"defaultStorage,omitempty"`
+	DefaultNetwork    NetworkSpec                `json:"defaultNetwork,omitempty"`
+	PlacementDefaults SchedulingSpec             `json:"placementDefaults,omitempty"`
 }
 
 //+kubebuilder:object:root=true
@@ -58,8 +39,6 @@ type GameServerClassSpec struct {
 //+kubebuilder:printcolumn:name="DefaultImage",type="string",JSONPath=".spec.defaultImage"
 //+kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"
 
-// GameServerClass provides reusable defaults and placement templates for GameServers.
-// It is cluster-scoped, similar to a Kubernetes StorageClass.
 type GameServerClass struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
@@ -69,7 +48,6 @@ type GameServerClass struct {
 
 //+kubebuilder:object:root=true
 
-// GameServerClassList contains a list of GameServerClass.
 type GameServerClassList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`

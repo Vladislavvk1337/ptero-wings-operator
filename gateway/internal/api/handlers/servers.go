@@ -22,21 +22,15 @@ import (
 
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 
-	gsk8s "github.com/Vladislavvk1337/ptero-wings-operator/gateway/internal/k8s"
+	wingscontroller "github.com/Vladislavvk1337/ptero-wings-operator/ptero-wings-controller"
 )
 
-// ServersHandler handles server lifecycle endpoints.
 type ServersHandler struct {
-	K8s       *gsk8s.Client
-	Namespace string
+	Service wingscontroller.Service
 }
 
-// Create handles POST /api/servers — creates a new GameServer CR.
-//
-//	Request body: gsk8s.CreateServerRequest (JSON)
-//	Response 201: {"id": "<uuid>"}
 func (h *ServersHandler) Create(w http.ResponseWriter, r *http.Request) {
-	var req gsk8s.CreateServerRequest
+	var req wingscontroller.CreateServerRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		writeError(w, http.StatusBadRequest, "invalid request body: "+err.Error())
 		return
@@ -49,9 +43,8 @@ func (h *ServersHandler) Create(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusBadRequest, "image is required")
 		return
 	}
-
-	gs := gsk8s.DefaultGameServerFrom(&req, h.Namespace)
-	if err := h.K8s.CreateGameServer(r.Context(), gs); err != nil {
+	server, err := h.Service.CreateServer(r.Context(), &req)
+	if err != nil {
 		if apierrors.IsAlreadyExists(err) {
 			writeError(w, http.StatusConflict, "server already exists")
 			return
@@ -59,39 +52,29 @@ func (h *ServersHandler) Create(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
-
-	writeJSON(w, http.StatusCreated, map[string]string{"id": req.UUID})
+	writeJSON(w, http.StatusCreated, map[string]string{"id": server.ID})
 }
 
-// Delete handles DELETE /api/servers/{uuid} — removes the GameServer CR.
-//
-//	Response 204: no body
 func (h *ServersHandler) Delete(w http.ResponseWriter, r *http.Request) {
 	uuid := serverIDFromPath(r)
 	if uuid == "" {
 		writeError(w, http.StatusBadRequest, "missing server uuid")
 		return
 	}
-
-	if err := h.K8s.DeleteGameServer(r.Context(), h.Namespace, uuid); err != nil {
+	if err := h.Service.DeleteServer(r.Context(), uuid); err != nil {
 		writeError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
-
 	w.WriteHeader(http.StatusNoContent)
 }
 
-// Get handles GET /api/servers/{uuid} — returns server phase and endpoint.
-//
-//	Response 200: {"id": "…", "phase": "…", "endpoint": "…"}
 func (h *ServersHandler) Get(w http.ResponseWriter, r *http.Request) {
 	uuid := serverIDFromPath(r)
 	if uuid == "" {
 		writeError(w, http.StatusBadRequest, "missing server uuid")
 		return
 	}
-
-	gs, err := h.K8s.GetGameServer(r.Context(), h.Namespace, uuid)
+	server, err := h.Service.GetServer(r.Context(), uuid)
 	if err != nil {
 		if apierrors.IsNotFound(err) {
 			writeError(w, http.StatusNotFound, "server not found")
@@ -100,10 +83,5 @@ func (h *ServersHandler) Get(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
-
-	writeJSON(w, http.StatusOK, map[string]any{
-		"id":       gs.Name,
-		"phase":    string(gs.Status.Phase),
-		"endpoint": gs.Status.Endpoint,
-	})
+	writeJSON(w, http.StatusOK, server)
 }

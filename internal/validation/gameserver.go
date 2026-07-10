@@ -14,7 +14,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-// Package validation provides pure-Go spec validation for GameServer objects.
 package validation
 
 import (
@@ -24,8 +23,6 @@ import (
 	v1alpha1 "github.com/Vladislavvk1337/ptero-wings-operator/api/v1alpha1"
 )
 
-// ValidateEffective validates the effective GameServer spec after class defaults are merged.
-// This is pure Go – no Kubernetes API calls are made.
 func ValidateEffective(gs *v1alpha1.GameServer) error {
 	var errs []error
 
@@ -49,22 +46,27 @@ func ValidateEffective(gs *v1alpha1.GameServer) error {
 			errs = append(errs, fmt.Errorf("spec.network.ports[%d].nodePort %d must be 0 (auto) or in [30000, 32767]", i, p.NodePort))
 		}
 	}
+	if allocation := gs.Spec.Network.NodePortAllocation; allocation != nil {
+		if allocation.Count < 0 {
+			errs = append(errs, fmt.Errorf("spec.network.nodePortAllocation.count must be >= 0"))
+		}
+		if allocation.StartPort < 0 {
+			errs = append(errs, fmt.Errorf("spec.network.nodePortAllocation.startPort must be >= 0"))
+		}
+	}
 
 	switch gs.Spec.Lifecycle.DeletePolicy {
 	case "", v1alpha1.DeletePolicyDelete, v1alpha1.DeletePolicyRetain:
-		// valid
 	default:
 		errs = append(errs, fmt.Errorf("spec.lifecycle.deletePolicy %q is invalid; use Delete or Retain", gs.Spec.Lifecycle.DeletePolicy))
 	}
 	switch gs.Spec.Storage.DeletePolicy {
 	case "", v1alpha1.DeletePolicyDelete, v1alpha1.DeletePolicyRetain:
-		// valid
 	default:
 		errs = append(errs, fmt.Errorf("spec.storage.deletePolicy %q is invalid; use Delete or Retain", gs.Spec.Storage.DeletePolicy))
 	}
 	switch gs.Spec.Storage.BackupPolicy {
 	case "", v1alpha1.BackupPolicyNone, v1alpha1.BackupPolicySnapshot, v1alpha1.BackupPolicyBackup:
-		// valid
 	default:
 		errs = append(errs, fmt.Errorf("spec.storage.backupPolicy %q is invalid; use None, Snapshot, or Backup", gs.Spec.Storage.BackupPolicy))
 	}
