@@ -38,7 +38,7 @@ spec:
     serviceType: NodePort
     nodePortAllocation:
       startPort: 30005
-      count: 5 # reserves the inclusive range 30005-30010
+      count: 5 # count is additional ports after startPort; reserves 30005-30010
       containerStartPort: 25565
   lifecycle:
     suspended: false

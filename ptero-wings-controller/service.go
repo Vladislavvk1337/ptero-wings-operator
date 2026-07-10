@@ -20,6 +20,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"log/slog"
 	"sort"
 	"time"
 
@@ -152,7 +153,9 @@ func (s *EmbeddedService) GetResources(ctx context.Context, id string) (*Resourc
 	if serverID == "" {
 		serverID = id
 	}
-	_ = s.panel.PushResources(ctx, &PanelResourcePayload{ServerID: serverID, Stats: stats})
+	if err := s.panel.PushResources(ctx, &PanelResourcePayload{ServerID: serverID, Stats: stats}); err != nil {
+		slog.Warn("panel resource push failed", "server", serverID, "err", err)
+	}
 	return stats, nil
 }
 
