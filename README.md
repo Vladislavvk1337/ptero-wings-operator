@@ -209,14 +209,23 @@ The panel will call the gateway's `/api/` endpoints as if it were a real Wings d
 | `resources` | object | | CPU / memory requests & limits |
 | `storage.size` | quantity | `1Gi` | PVC size |
 | `storage.mountPath` | string | `/data` | Mount point inside container |
+| `storage.deletePolicy` | string | `Delete` | `Delete` or `Retain` PVCs on deletion |
+| `storage.backupPolicy` | string | `None` | Optional pre-delete protection: `None`, `Snapshot`, `Backup` |
+| `storage.restoreFrom` | string | | Restore source ID for external tooling |
 | `network.serviceType` | string | `NodePort` | `ClusterIP`, `NodePort`, or `LoadBalancer` |
 | `network.ports` | list | | Ports to expose |
 | `lifecycle.suspended` | bool | `false` | Scale to 0 without deleting |
-| `lifecycle.deletePolicy` | string | `Delete` | `Delete` or `Retain` PVCs on deletion |
+| `lifecycle.restartPolicy` | string | `Always` | Pod restart behavior (StatefulSet currently supports `Always`) |
+| `protection.backupBeforeDelete` | bool | `false` | Request backup annotation on PVC before finalizer cleanup |
+| `protection.snapshotBeforeDelete` | bool | `false` | Request snapshot annotation on PVC before finalizer cleanup |
+| `external.externalServerId` | string | | External system server identifier |
 | `classRef.name` | string | | Reference to a `GameServerClass` for defaults |
 
 > `storage.existingClaim` is deprecated and rejected by validation.  
 > The operator always manages one dedicated PVC per `GameServer`.
+>
+> Longhorn integration is optional: when protection/backup flags are set, the operator adds
+> snapshot/backup request annotations to the managed PVC for external automation.
 
 ## GameServer Status
 
@@ -226,7 +235,9 @@ The panel will call the gateway's `/api/` endpoints as if it were a real Wings d
 | `conditions` | Standard k8s conditions: `Ready`, `Reconciling`, `Stalled`, `StorageReady`, `NetworkReady`, `PterodactylSynced` |
 | `endpoint` | `host:port` the server is reachable on |
 | `podName` | Name of the current game server pod |
+| `containerName` | Name of the managed game server container (`gameserver`) |
 | `serviceName` | Name of the managed Service |
+| `pvcName` | Name of the dedicated managed PVC |
 | `allocatedNode` | Kubernetes node running the pod |
 | `lastError` | Most recent reconcile error (cleared on success) |
 

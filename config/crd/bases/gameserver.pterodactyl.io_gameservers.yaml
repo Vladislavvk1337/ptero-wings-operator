@@ -65,6 +65,15 @@ spec:
                     type: string
                 type: object
                 x-kubernetes-map-type: atomic
+              external:
+                description: External carries external-system metadata, for example
+                  panel server IDs.
+                properties:
+                  externalServerId:
+                    description: ExternalServerID links this GameServer to an external
+                      panel/server identifier.
+                    type: string
+                type: object
               game:
                 description: Game defines the game type, image and entrypoint.
                 properties:
@@ -253,14 +262,28 @@ spec:
                     description: |-
                       DeletePolicy determines whether PVCs are retained on deletion.
                       Defaults to Delete.
+                      Deprecated: prefer spec.storage.deletePolicy.
                     enum:
                     - Delete
                     - Retain
+                    type: string
+                  restartPolicy:
+                    description: RestartPolicy controls pod restart behavior for the
+                      game container.
+                    enum:
+                    - Always
+                    - OnFailure
+                    - Never
                     type: string
                   suspended:
                     description: Suspended scales the StatefulSet to 0 without deleting
                       the GameServer.
                     type: boolean
+                  ttlSecondsAfterFinished:
+                    description: TTLSecondsAfterFinished is an optional retention
+                      TTL for completed workloads.
+                    format: int64
+                    type: integer
                 type: object
               network:
                 description: Network defines Service type and port configuration.
@@ -321,6 +344,19 @@ spec:
                   userId:
                     description: UserID is the Pterodactyl user identifier.
                     type: string
+                type: object
+              protection:
+                description: Protection controls optional pre-delete backup/snapshot
+                  safeguards.
+                properties:
+                  backupBeforeDelete:
+                    description: BackupBeforeDelete requests a backup action before
+                      finalizer cleanup.
+                    type: boolean
+                  snapshotBeforeDelete:
+                    description: SnapshotBeforeDelete requests a snapshot action before
+                      finalizer cleanup.
+                    type: boolean
                 type: object
               pterodactyl:
                 description: Pterodactyl carries optional Pterodactyl panel metadata.
@@ -1366,6 +1402,23 @@ spec:
                   accessMode:
                     description: AccessMode defaults to ReadWriteOnce.
                     type: string
+                  backupPolicy:
+                    description: |-
+                      BackupPolicy optionally requests storage protection integration before delete.
+                      Supported actions are None, Snapshot, and Backup.
+                    enum:
+                    - None
+                    - Snapshot
+                    - Backup
+                    type: string
+                  deletePolicy:
+                    description: |-
+                      DeletePolicy controls PVC retention for this GameServer.
+                      When set, this field takes precedence over spec.lifecycle.deletePolicy.
+                    enum:
+                    - Delete
+                    - Retain
+                    type: string
                   existingClaim:
                     description: |-
                       ExistingClaim is deprecated and not supported by the operator.
@@ -1374,6 +1427,11 @@ spec:
                   mountPath:
                     description: MountPath is the path inside the container. Defaults
                       to /data.
+                    type: string
+                  restoreFrom:
+                    description: |-
+                      RestoreFrom is an optional restore source identifier used by external tooling.
+                      The operator stores it as intent metadata and does not apply restore logic itself.
                     type: string
                   size:
                     anyOf:
@@ -1471,6 +1529,10 @@ spec:
                 x-kubernetes-list-map-keys:
                 - type
                 x-kubernetes-list-type: map
+              containerName:
+                description: ContainerName is the name of the game server container
+                  within the pod.
+                type: string
               endpoint:
                 description: Endpoint is the primary host:port the server is reachable
                   on from outside the cluster.
@@ -1497,6 +1559,10 @@ spec:
                 type: string
               podName:
                 description: PodName is the name of the current game server pod.
+                type: string
+              pvcName:
+                description: PVCName is the name of the dedicated PVC managed for
+                  this GameServer.
                 type: string
               serviceName:
                 description: ServiceName is the name of the managed Kubernetes Service.

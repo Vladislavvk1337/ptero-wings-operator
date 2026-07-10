@@ -56,9 +56,24 @@ func ValidateEffective(gs *v1alpha1.GameServer) error {
 	default:
 		errs = append(errs, fmt.Errorf("spec.lifecycle.deletePolicy %q is invalid; use Delete or Retain", gs.Spec.Lifecycle.DeletePolicy))
 	}
+	switch gs.Spec.Storage.DeletePolicy {
+	case "", v1alpha1.DeletePolicyDelete, v1alpha1.DeletePolicyRetain:
+		// valid
+	default:
+		errs = append(errs, fmt.Errorf("spec.storage.deletePolicy %q is invalid; use Delete or Retain", gs.Spec.Storage.DeletePolicy))
+	}
+	switch gs.Spec.Storage.BackupPolicy {
+	case "", v1alpha1.BackupPolicyNone, v1alpha1.BackupPolicySnapshot, v1alpha1.BackupPolicyBackup:
+		// valid
+	default:
+		errs = append(errs, fmt.Errorf("spec.storage.backupPolicy %q is invalid; use None, Snapshot, or Backup", gs.Spec.Storage.BackupPolicy))
+	}
 
 	if gs.Spec.Storage.ExistingClaim != "" {
 		errs = append(errs, fmt.Errorf("spec.storage.existingClaim is not supported; each GameServer gets a dedicated PVC"))
+	}
+	if gs.Spec.Lifecycle.RestartPolicy != "" && gs.Spec.Lifecycle.RestartPolicy != "Always" {
+		errs = append(errs, fmt.Errorf("spec.lifecycle.restartPolicy %q is not supported for StatefulSet-backed servers; use Always", gs.Spec.Lifecycle.RestartPolicy))
 	}
 
 	return errors.Join(errs...)

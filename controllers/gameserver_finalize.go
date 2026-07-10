@@ -19,6 +19,7 @@ package controllers
 import (
 	"context"
 	"fmt"
+	"time"
 
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -50,9 +51,14 @@ func (r *GameServerReconciler) finalize(ctx context.Context, gs *v1alpha1.GameSe
 		return ctrl.Result{}, fmt.Errorf("releasing ports: %w", err)
 	}
 
+	// Optional snapshot/backup hooks for external Longhorn/CSI automation.
+	if err := r.requestStorageProtection(ctx, gs); err != nil {
+		logger.Error(err, "failed to request storage protection action")
+	}
+
 	// When deletePolicy is Retain, detach the PVC owner reference so it survives
 	// GameServer deletion (garbage collection would otherwise delete it).
-	if gs.Spec.Lifecycle.DeletePolicy == v1alpha1.DeletePolicyRetain {
+	if helpers.EffectiveDeletePolicy(gs) == v1alpha1.DeletePolicyRetain {
 		if err := r.detachPVC(ctx, gs); err != nil {
 			// Non-fatal; log and continue.
 			logger.Error(err, "failed to detach PVC owner reference")
@@ -95,5 +101,37 @@ func (r *GameServerReconciler) detachPVC(ctx context.Context, gs *v1alpha1.GameS
 		}
 	}
 	pvc.OwnerReferences = filtered
+	return r.Patch(ctx, pvc, patch)
+}
+
+// requestStorageProtection adds PVC annotations that can be consumed by
+// external snapshot/backup automation (e.g. Longhorn jobs).
+func (r *GameServerReconciler) requestStorageProtection(ctx context.Context, gs *v1alpha1.GameServer) error {
+	wantSnapshot := gs.Spec.Protection.SnapshotBeforeDelete || gs.Spec.Storage.BackupPolicy == v1alpha1.BackupPolicySnapshot
+	wantBackup := gs.Spec.Protection.BackupBeforeDelete || gs.Spec.Storage.BackupPolicy == v1alpha1.BackupPolicyBackup
+	if !wantSnapshot && !wantBackup {
+		return nil
+	}
+
+	pvc := &corev1.PersistentVolumeClaim{}
+	err := r.Get(ctx, types.NamespacedName{Name: helpers.PVCName(gs), Namespace: gs.Namespace}, pvc)
+	if apierrors.IsNotFound(err) {
+		return nil
+	}
+	if err != nil {
+		return err
+	}
+
+	patch := client.MergeFrom(pvc.DeepCopy())
+	if pvc.Annotations == nil {
+		pvc.Annotations = map[string]string{}
+	}
+	now := time.Now().UTC().Format(time.RFC3339)
+	if wantSnapshot {
+		pvc.Annotations["gameserver.pterodactyl.io/snapshot-requested-at"] = now
+	}
+	if wantBackup {
+		pvc.Annotations["gameserver.pterodactyl.io/backup-requested-at"] = now
+	}
 	return r.Patch(ctx, pvc, patch)
 }

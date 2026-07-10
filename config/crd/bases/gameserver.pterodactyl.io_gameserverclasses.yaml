@@ -172,6 +172,23 @@ spec:
                   accessMode:
                     description: AccessMode defaults to ReadWriteOnce.
                     type: string
+                  backupPolicy:
+                    description: |-
+                      BackupPolicy optionally requests storage protection integration before delete.
+                      Supported actions are None, Snapshot, and Backup.
+                    enum:
+                    - None
+                    - Snapshot
+                    - Backup
+                    type: string
+                  deletePolicy:
+                    description: |-
+                      DeletePolicy controls PVC retention for this GameServer.
+                      When set, this field takes precedence over spec.lifecycle.deletePolicy.
+                    enum:
+                    - Delete
+                    - Retain
+                    type: string
                   existingClaim:
                     description: |-
                       ExistingClaim is deprecated and not supported by the operator.
@@ -180,6 +197,11 @@ spec:
                   mountPath:
                     description: MountPath is the path inside the container. Defaults
                       to /data.
+                    type: string
+                  restoreFrom:
+                    description: |-
+                      RestoreFrom is an optional restore source identifier used by external tooling.
+                      The operator stores it as intent metadata and does not apply restore logic itself.
                     type: string
                   size:
                     anyOf:

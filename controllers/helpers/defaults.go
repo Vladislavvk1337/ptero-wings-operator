@@ -60,6 +60,15 @@ func MergeWithClass(gs *v1alpha1.GameServer, class *v1alpha1.GameServerClass) *v
 	if merged.Spec.Storage.MountPath == "" {
 		merged.Spec.Storage.MountPath = class.Spec.DefaultStorage.MountPath
 	}
+	if merged.Spec.Storage.DeletePolicy == "" {
+		merged.Spec.Storage.DeletePolicy = class.Spec.DefaultStorage.DeletePolicy
+	}
+	if merged.Spec.Storage.BackupPolicy == "" {
+		merged.Spec.Storage.BackupPolicy = class.Spec.DefaultStorage.BackupPolicy
+	}
+	if merged.Spec.Storage.RestoreFrom == "" {
+		merged.Spec.Storage.RestoreFrom = class.Spec.DefaultStorage.RestoreFrom
+	}
 
 	// Network
 	if len(merged.Spec.Network.Ports) == 0 && len(class.Spec.DefaultNetwork.Ports) > 0 {

@@ -51,11 +51,25 @@ func (w *GameServerWebhook) Default(_ context.Context, obj runtime.Object) error
 	if gs.Spec.Runtime.ImagePullPolicy == "" {
 		gs.Spec.Runtime.ImagePullPolicy = corev1.PullIfNotPresent
 	}
+	userStorageDeletePolicy := gs.Spec.Storage.DeletePolicy
+	if gs.Spec.Storage.DeletePolicy == "" {
+		gs.Spec.Storage.DeletePolicy = v1alpha1.DeletePolicyDelete
+	}
 	if gs.Spec.Lifecycle.DeletePolicy == "" {
-		gs.Spec.Lifecycle.DeletePolicy = v1alpha1.DeletePolicyDelete
+		if userStorageDeletePolicy != "" {
+			gs.Spec.Lifecycle.DeletePolicy = userStorageDeletePolicy
+		} else {
+			gs.Spec.Lifecycle.DeletePolicy = v1alpha1.DeletePolicyDelete
+		}
+	}
+	if gs.Spec.Storage.BackupPolicy == "" {
+		gs.Spec.Storage.BackupPolicy = v1alpha1.BackupPolicyNone
 	}
 	if gs.Spec.Storage.MountPath == "" && !gs.Spec.Storage.Size.IsZero() {
 		gs.Spec.Storage.MountPath = "/data"
+	}
+	if gs.Spec.Lifecycle.RestartPolicy == "" {
+		gs.Spec.Lifecycle.RestartPolicy = corev1.RestartPolicyAlways
 	}
 	for i := range gs.Spec.Network.Ports {
 		if gs.Spec.Network.Ports[i].Protocol == "" {

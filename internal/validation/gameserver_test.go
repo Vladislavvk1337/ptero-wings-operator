@@ -106,6 +106,51 @@ func TestValidateEffective_ValidDeletePolicies(t *testing.T) {
 	}
 }
 
+func TestValidateEffective_InvalidStorageDeletePolicy(t *testing.T) {
+	gs := newValid()
+	gs.Spec.Storage.DeletePolicy = "Bogus"
+	if err := validation.ValidateEffective(gs); err == nil {
+		t.Error("expected error for invalid spec.storage.deletePolicy")
+	}
+}
+
+func TestValidateEffective_ValidStorageBackupPolicy(t *testing.T) {
+	for _, policy := range []v1alpha1.BackupPolicy{
+		"",
+		v1alpha1.BackupPolicyNone,
+		v1alpha1.BackupPolicySnapshot,
+		v1alpha1.BackupPolicyBackup,
+	} {
+		gs := newValid()
+		gs.Spec.Storage.BackupPolicy = policy
+		if err := validation.ValidateEffective(gs); err != nil {
+			t.Errorf("unexpected error for backup policy %q: %v", policy, err)
+		}
+	}
+}
+
+func TestValidateEffective_InvalidStorageBackupPolicy(t *testing.T) {
+	gs := newValid()
+	gs.Spec.Storage.BackupPolicy = "Bogus"
+	if err := validation.ValidateEffective(gs); err == nil {
+		t.Error("expected error for invalid spec.storage.backupPolicy")
+	}
+}
+
+func TestValidateEffective_OnlyAlwaysRestartPolicyIsSupported(t *testing.T) {
+	gs := newValid()
+	gs.Spec.Lifecycle.RestartPolicy = corev1.RestartPolicyOnFailure
+	if err := validation.ValidateEffective(gs); err == nil {
+		t.Error("expected error for unsupported restart policy")
+	}
+
+	gs = newValid()
+	gs.Spec.Lifecycle.RestartPolicy = corev1.RestartPolicyAlways
+	if err := validation.ValidateEffective(gs); err != nil {
+		t.Errorf("unexpected error for restartPolicy=Always: %v", err)
+	}
+}
+
 func TestValidateEffective_ExistingClaimIsRejected(t *testing.T) {
 	gs := newValid()
 	gs.Spec.Storage.ExistingClaim = "legacy-pvc"
