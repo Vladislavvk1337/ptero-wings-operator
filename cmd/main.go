@@ -54,6 +54,8 @@ func main() {
 	var probeAddr string
 	var secureMetrics bool
 	var enableHTTP2 bool
+	var nodePortMin int
+	var nodePortMax int
 
 	flag.StringVar(&metricsAddr, "metrics-bind-address", ":8080", "Metrics endpoint bind address.")
 	flag.StringVar(&probeAddr, "health-probe-bind-address", ":8081", "Health probe bind address.")
@@ -62,6 +64,8 @@ func main() {
 	flag.BoolVar(&secureMetrics, "metrics-secure", false, "Serve metrics over TLS.")
 	flag.BoolVar(&enableHTTP2, "enable-http2", false,
 		"Enable HTTP/2 for metrics and webhook servers.")
+	flag.IntVar(&nodePortMin, "nodeport-min", 30000, "Start of the bundled NodePort allocation range.")
+	flag.IntVar(&nodePortMax, "nodeport-max", 31000, "End of the bundled NodePort allocation range.")
 
 	opts := zap.Options{Development: true}
 	opts.BindFlags(flag.CommandLine)
@@ -101,7 +105,7 @@ func main() {
 	if err = (&controllers.GameServerReconciler{
 		Client:    mgr.GetClient(),
 		Scheme:    mgr.GetScheme(),
-		Allocator: &portsalloc.NoopAllocator{},
+		Allocator: portsalloc.NewClusterAllocator(mgr.GetClient(), portsalloc.Config{MinPort: int32(nodePortMin), MaxPort: int32(nodePortMax)}),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "GameServer")
 		os.Exit(1)

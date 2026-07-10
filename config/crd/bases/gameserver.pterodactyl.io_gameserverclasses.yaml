@@ -27,9 +27,6 @@ spec:
     name: v1alpha1
     schema:
       openAPIV3Schema:
-        description: |-
-          GameServerClass provides reusable defaults and placement templates for GameServers.
-          It is cluster-scoped, similar to a Kubernetes StorageClass.
         properties:
           apiVersion:
             description: |-
@@ -49,52 +46,47 @@ spec:
           metadata:
             type: object
           spec:
-            description: GameServerClassSpec defines defaults applied to every GameServer
-              that references this class.
             properties:
+              defaultArgs:
+                items:
+                  type: string
+                type: array
               defaultCommand:
-                description: DefaultCommand is the entrypoint used when GameServer.spec.game.command
-                  is empty.
                 items:
                   type: string
                 type: array
               defaultImage:
-                description: DefaultImage is the OCI image used when GameServer.spec.game.image
-                  is empty.
                 type: string
               defaultNetwork:
-                description: DefaultNetwork is applied when GameServer.spec.network
-                  is empty.
                 properties:
+                  nodePortAllocation:
+                    properties:
+                      containerStartPort:
+                        format: int32
+                        type: integer
+                      count:
+                        format: int32
+                        type: integer
+                      protocol:
+                        default: TCP
+                        type: string
+                      startPort:
+                        format: int32
+                        type: integer
+                    type: object
                   ports:
-                    description: Ports are forwarded to the container via a Kubernetes
-                      Service.
                     items:
-                      description: PortSpec exposes a single game server port via
-                        the managed Service.
                       properties:
                         containerPort:
-                          description: ContainerPort is the port the game server listens
-                            on inside the container.
                           format: int32
-                          maximum: 65535
-                          minimum: 1
                           type: integer
                         name:
-                          description: Name is a short label, e.g. "game" or "rcon".
                           type: string
                         nodePort:
-                          description: NodePort is the host port. 0 lets Kubernetes
-                            assign one automatically.
                           format: int32
-                          maximum: 32767
-                          minimum: 0
                           type: integer
                         protocol:
                           default: TCP
-                          enum:
-                          - TCP
-                          - UDP
                           type: string
                       required:
                       - containerPort
@@ -102,16 +94,12 @@ spec:
                       type: object
                     type: array
                   serviceType:
-                    description: ServiceType defaults to NodePort when ports are defined.
-                    enum:
-                    - ClusterIP
-                    - NodePort
-                    - LoadBalancer
+                    description: Service Type string describes ingress methods for
+                      a service
                     type: string
                 type: object
               defaultResources:
-                description: DefaultResources are applied when GameServer.spec.resources
-                  is not set.
+                description: ResourceRequirements describes the compute resource requirements.
                 properties:
                   claims:
                     description: |-
@@ -165,64 +153,48 @@ spec:
                       More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
                     type: object
                 type: object
+              defaultStartup:
+                properties:
+                  raw:
+                    type: string
+                  variables:
+                    additionalProperties:
+                      type: string
+                    type: object
+                type: object
               defaultStorage:
-                description: DefaultStorage is applied when GameServer.spec.storage
-                  fields are unset.
                 properties:
                   accessMode:
-                    description: AccessMode defaults to ReadWriteOnce.
                     type: string
                   backupPolicy:
-                    description: |-
-                      BackupPolicy optionally requests storage protection integration before delete.
-                      Supported actions are None, Snapshot, and Backup.
                     enum:
                     - None
                     - Snapshot
                     - Backup
                     type: string
                   deletePolicy:
-                    description: |-
-                      DeletePolicy controls PVC retention for this GameServer.
-                      When set, this field takes precedence over spec.lifecycle.deletePolicy.
                     enum:
                     - Delete
                     - Retain
                     type: string
                   existingClaim:
-                    description: |-
-                      ExistingClaim is deprecated and not supported by the operator.
-                      Every GameServer gets its own managed PVC.
                     type: string
                   mountPath:
-                    description: MountPath is the path inside the container. Defaults
-                      to /data.
                     type: string
                   restoreFrom:
-                    description: |-
-                      RestoreFrom is an optional restore source identifier used by external tooling.
-                      The operator stores it as intent metadata and does not apply restore logic itself.
                     type: string
                   size:
                     anyOf:
                     - type: integer
                     - type: string
-                    description: Size is the requested PVC capacity, e.g. "10Gi".
                     pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
                     x-kubernetes-int-or-string: true
                   storageClassName:
-                    description: StorageClassName overrides the cluster default storage
-                      class.
                     type: string
                 type: object
               gameType:
-                description: GameType is the short game identifier this class targets,
-                  e.g. "minecraft".
-                minLength: 1
                 type: string
               placementDefaults:
-                description: PlacementDefaults are applied when GameServer.spec.scheduling
-                  is empty.
                 properties:
                   affinity:
                     description: Affinity is a group of affinity scheduling rules.

@@ -42,9 +42,16 @@ spec:
                 secretKeyRef:
                   name: ptero-wings-gateway-token
                   key: token
-            # Set to "true" to validate tokens as HS256 JWTs instead of static tokens.
             - name: GATEWAY_USE_JWT
               value: "false"
+            - name: PANEL_URL
+              value: ""
+            - name: PANEL_TOKEN
+              value: ""
+            - name: NODEPORT_MIN
+              value: "30000"
+            - name: NODEPORT_MAX
+              value: "31000"
           ports:
             - name: https
               containerPort: 8090
@@ -84,9 +91,6 @@ spec:
             secretName: ptero-wings-gateway-tls
       terminationGracePeriodSeconds: 30
 ---
-# Secret placeholder — replace token value before deploying.
-# Example: kubectl create secret generic ptero-wings-gateway-token \
-#            --from-literal=token="<your-secret-token>" -n ptero-system
 apiVersion: v1
 kind: Secret
 metadata:
@@ -97,5 +101,4 @@ metadata:
     app.kubernetes.io/part-of: ptero-wings-operator
 type: Opaque
 data:
-  # Base64 encoded placeholder — REPLACE before deploying.
-  token: Y2hhbmdlbWU=  # "changeme"
+  token: Y2hhbmdlbWU=

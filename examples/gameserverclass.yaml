@@ -5,7 +5,11 @@ metadata:
 spec:
   gameType: minecraft
   defaultImage: itzg/minecraft-server:latest
-  defaultCommand: []
+  defaultStartup:
+    raw: java -Xmx{{SERVER_MEMORY}}M -jar "{{SERVER_JARFILE}}"
+    variables:
+      SERVER_MEMORY: "1024"
+      SERVER_JARFILE: server.jar
   defaultResources:
     requests:
       cpu: "500m"
@@ -19,10 +23,9 @@ spec:
     mountPath: /data
   defaultNetwork:
     serviceType: NodePort
-    ports:
-      - name: game
-        protocol: TCP
-        containerPort: 25565
+    nodePortAllocation:
+      count: 2
+      containerStartPort: 25565
   placementDefaults:
     nodeSelector:
       kubernetes.io/os: linux

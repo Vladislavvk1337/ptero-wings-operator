@@ -1,27 +1,17 @@
----
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: ptero-wings-gateway
+  name: ptero-wings-controller
   namespace: ptero-system
-  labels:
-    app.kubernetes.io/name: ptero-wings-gateway
-    app.kubernetes.io/part-of: ptero-wings-operator
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: ptero-wings-gateway
-  labels:
-    app.kubernetes.io/name: ptero-wings-gateway
-    app.kubernetes.io/part-of: ptero-wings-operator
+  name: ptero-wings-controller
 rules:
   - apiGroups: ["gameserver.pterodactyl.io"]
-    resources: ["gameservers", "gameserverclasses"]
+    resources: ["gameservers", "gameservers/status", "gameserverclasses"]
     verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
-  - apiGroups: ["gameserver.pterodactyl.io"]
-    resources: ["gameservers/status"]
-    verbs: ["get"]
   - apiGroups: [""]
     resources: ["pods", "pods/log", "pods/exec", "persistentvolumeclaims", "services", "nodes"]
     verbs: ["get", "list", "watch", "create"]
@@ -32,15 +22,12 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: ptero-wings-gateway
-  labels:
-    app.kubernetes.io/name: ptero-wings-gateway
-    app.kubernetes.io/part-of: ptero-wings-operator
+  name: ptero-wings-controller
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: ptero-wings-gateway
+  name: ptero-wings-controller
 subjects:
   - kind: ServiceAccount
-    name: ptero-wings-gateway
+    name: ptero-wings-controller
     namespace: ptero-system

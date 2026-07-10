@@ -21,26 +21,20 @@ import (
 
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 
-	gsk8s "github.com/Vladislavvk1337/ptero-wings-operator/gateway/internal/k8s"
+	wingscontroller "github.com/Vladislavvk1337/ptero-wings-operator/ptero-wings-controller"
 )
 
-// ResourcesHandler handles GET /api/servers/{uuid}/resources.
 type ResourcesHandler struct {
-	K8s       *gsk8s.Client
-	Namespace string
+	Service wingscontroller.Service
 }
 
-// Handle returns a Wings-compatible resource stats snapshot.
-//
-//	Response 200: {"cpu_absolute": 0.5, "memory_bytes": 1073741824, "state": "Running"}
 func (h *ResourcesHandler) Handle(w http.ResponseWriter, r *http.Request) {
 	uuid := serverIDFromPath(r)
 	if uuid == "" {
 		writeError(w, http.StatusBadRequest, "missing server uuid")
 		return
 	}
-
-	stats, err := h.K8s.GetResourceStats(r.Context(), h.Namespace, uuid)
+	stats, err := h.Service.GetResources(r.Context(), uuid)
 	if err != nil {
 		if apierrors.IsNotFound(err) {
 			writeError(w, http.StatusNotFound, "server not found")
@@ -49,6 +43,5 @@ func (h *ResourcesHandler) Handle(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
-
 	writeJSON(w, http.StatusOK, stats)
 }

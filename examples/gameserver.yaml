@@ -3,27 +3,26 @@ kind: GameServer
 metadata:
   name: minecraft-survival
   namespace: game-servers
-  labels:
-    app.kubernetes.io/part-of: ptero-wings-operator
 spec:
   classRef:
     name: minecraft-vanilla
-  ownerRef:
-    userId: "user-42"
-    nodeId: "node-1"
-    serverUid: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
   game:
     type: minecraft
     image: itzg/minecraft-server:latest
     env:
       - name: EULA
         value: "TRUE"
-      - name: TYPE
-        value: VANILLA
-      - name: MEMORY
-        value: "1536M"
+      - name: SERVER_MEMORY
+        value: "1536"
+      - name: SERVER_JARFILE
+        value: server.jar
   runtime:
     imagePullPolicy: IfNotPresent
+    startup:
+      raw: java -Xms128M -Xmx{{SERVER_MEMORY}}M -jar {{SERVER_JARFILE}}
+      variables:
+        SERVER_MEMORY: "1536"
+        SERVER_JARFILE: server.jar
   resources:
     requests:
       cpu: "500m"
@@ -35,29 +34,16 @@ spec:
     size: 10Gi
     mountPath: /data
     deletePolicy: Retain
-    backupPolicy: Snapshot
-    restoreFrom: ""
   network:
     serviceType: NodePort
-    ports:
-      - name: game
-        protocol: TCP
-        containerPort: 25565
-      - name: query
-        protocol: UDP
-        containerPort: 25565
-  scheduling:
-    nodeSelector:
-      kubernetes.io/os: linux
+    nodePortAllocation:
+      startPort: 30005
+      count: 5 # count is additional ports after startPort; reserves 30005-30010
+      containerStartPort: 25565
   lifecycle:
     suspended: false
-    # Applied to the StatefulSet pod template; omitted defaults to Always, and if set the value must be Always.
-    restartPolicy: Always
-  protection:
-    snapshotBeforeDelete: true
   external:
     externalServerId: "srv-42"
   pterodactyl:
     serverUuid: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
     nodeId: 1
-    synchronized: false
