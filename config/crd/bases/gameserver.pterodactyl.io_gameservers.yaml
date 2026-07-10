@@ -30,8 +30,6 @@ spec:
     name: v1alpha1
     schema:
       openAPIV3Schema:
-        description: GameServer represents a single game server deployment managed
-          by the cube-operator.
         properties:
           apiVersion:
             description: |-
@@ -51,11 +49,11 @@ spec:
           metadata:
             type: object
           spec:
-            description: GameServerSpec is the desired state of a GameServer.
             properties:
               classRef:
-                description: ClassRef optionally references a GameServerClass that
-                  supplies defaults.
+                description: |-
+                  LocalObjectReference contains enough information to let you locate the
+                  referenced object inside the same namespace.
                 properties:
                   name:
                     description: |-
@@ -66,29 +64,21 @@ spec:
                 type: object
                 x-kubernetes-map-type: atomic
               external:
-                description: External carries external-system metadata, for example
-                  panel server IDs.
                 properties:
                   externalServerId:
-                    description: ExternalServerID links this GameServer to an external
-                      panel/server identifier.
                     type: string
                 type: object
               game:
-                description: Game defines the game type, image and entrypoint.
                 properties:
                   args:
-                    description: Args are passed as arguments to the entrypoint.
                     items:
                       type: string
                     type: array
                   command:
-                    description: Command overrides the container entrypoint.
                     items:
                       type: string
                     type: array
                   env:
-                    description: Env injects environment variables into the game container.
                     items:
                       description: EnvVar represents an environment variable present
                         in a Container.
@@ -202,8 +192,6 @@ spec:
                       type: object
                     type: array
                   envFrom:
-                    description: EnvFrom populates environment variables from ConfigMaps
-                      or Secrets.
                     items:
                       description: EnvFromSource represents the source of a set of
                         ConfigMaps
@@ -243,80 +231,62 @@ spec:
                       type: object
                     type: array
                   image:
-                    description: Image is the OCI container image. May be inherited
-                      from a GameServerClass.
                     type: string
                   type:
-                    description: |-
-                      Type is a short game identifier, e.g. "minecraft", "csgo", "valheim".
-                      Immutable once set.
-                    minLength: 1
                     type: string
                 required:
                 - type
                 type: object
               lifecycle:
-                description: Lifecycle controls suspension and deletion behaviour.
                 properties:
                   deletePolicy:
-                    description: |-
-                      DeletePolicy determines whether PVCs are retained on deletion.
-                      Defaults to Delete.
-                      Deprecated: prefer spec.storage.deletePolicy.
                     enum:
                     - Delete
                     - Retain
                     type: string
                   restartPolicy:
-                    description: RestartPolicy controls pod restart behavior for the
-                      game container.
-                    enum:
-                    - Always
-                    - OnFailure
-                    - Never
+                    description: |-
+                      RestartPolicy describes how the container should be restarted.
+                      Only one of the following restart policies may be specified.
+                      If none of the following policies is specified, the default one
+                      is RestartPolicyAlways.
                     type: string
                   suspended:
-                    description: Suspended scales the StatefulSet to 0 without deleting
-                      the GameServer.
                     type: boolean
                   ttlSecondsAfterFinished:
-                    description: TTLSecondsAfterFinished is an optional retention
-                      TTL for completed workloads.
                     format: int64
                     type: integer
                 type: object
               network:
-                description: Network defines Service type and port configuration.
                 properties:
+                  nodePortAllocation:
+                    properties:
+                      containerStartPort:
+                        format: int32
+                        type: integer
+                      count:
+                        format: int32
+                        type: integer
+                      protocol:
+                        default: TCP
+                        type: string
+                      startPort:
+                        format: int32
+                        type: integer
+                    type: object
                   ports:
-                    description: Ports are forwarded to the container via a Kubernetes
-                      Service.
                     items:
-                      description: PortSpec exposes a single game server port via
-                        the managed Service.
                       properties:
                         containerPort:
-                          description: ContainerPort is the port the game server listens
-                            on inside the container.
                           format: int32
-                          maximum: 65535
-                          minimum: 1
                           type: integer
                         name:
-                          description: Name is a short label, e.g. "game" or "rcon".
                           type: string
                         nodePort:
-                          description: NodePort is the host port. 0 lets Kubernetes
-                            assign one automatically.
                           format: int32
-                          maximum: 32767
-                          minimum: 0
                           type: integer
                         protocol:
                           default: TCP
-                          enum:
-                          - TCP
-                          - UDP
                           type: string
                       required:
                       - containerPort
@@ -324,59 +294,38 @@ spec:
                       type: object
                     type: array
                   serviceType:
-                    description: ServiceType defaults to NodePort when ports are defined.
-                    enum:
-                    - ClusterIP
-                    - NodePort
-                    - LoadBalancer
+                    description: Service Type string describes ingress methods for
+                      a service
                     type: string
                 type: object
               ownerRef:
-                description: OwnerRef links this server to a Pterodactyl panel user/node.
                 properties:
                   nodeId:
-                    description: NodeID is the Pterodactyl node identifier.
                     type: string
                   serverUid:
-                    description: ServerUID is the Pterodactyl server UUID used by
-                      an external adapter.
                     type: string
                   userId:
-                    description: UserID is the Pterodactyl user identifier.
                     type: string
                 type: object
               protection:
-                description: Protection controls optional pre-delete backup/snapshot
-                  safeguards.
                 properties:
                   backupBeforeDelete:
-                    description: BackupBeforeDelete requests a backup action before
-                      finalizer cleanup.
                     type: boolean
                   snapshotBeforeDelete:
-                    description: SnapshotBeforeDelete requests a snapshot action before
-                      finalizer cleanup.
                     type: boolean
                 type: object
               pterodactyl:
-                description: Pterodactyl carries optional Pterodactyl panel metadata.
                 properties:
                   nodeId:
-                    description: NodeID is the Pterodactyl node ID.
                     format: int32
                     type: integer
                   serverUuid:
-                    description: ServerUUID is the Pterodactyl server UUID.
                     type: string
                   synchronized:
-                    description: |-
-                      Synchronized is set to true by an external adapter once it has synced
-                      this server to the Pterodactyl panel.
                     type: boolean
                 type: object
               resources:
-                description: Resources are CPU/memory requests and limits for the
-                  game container.
+                description: ResourceRequirements describes the compute resource requirements.
                 properties:
                   claims:
                     description: |-
@@ -431,15 +380,10 @@ spec:
                     type: object
                 type: object
               runtime:
-                description: Runtime controls image pull behaviour.
                 properties:
                   imagePullPolicy:
                     description: PullPolicy describes a policy for if/when to pull
                       a container image
-                    enum:
-                    - Always
-                    - Never
-                    - IfNotPresent
                     type: string
                   imagePullSecrets:
                     items:
@@ -456,9 +400,17 @@ spec:
                       type: object
                       x-kubernetes-map-type: atomic
                     type: array
+                  startup:
+                    properties:
+                      raw:
+                        type: string
+                      variables:
+                        additionalProperties:
+                          type: string
+                        type: object
+                    type: object
                 type: object
               scheduling:
-                description: Scheduling controls pod placement.
                 properties:
                   affinity:
                     description: Affinity is a group of affinity scheduling rules.
@@ -1397,67 +1349,43 @@ spec:
                     type: array
                 type: object
               storage:
-                description: Storage describes the PVC backing the game data directory.
                 properties:
                   accessMode:
-                    description: AccessMode defaults to ReadWriteOnce.
                     type: string
                   backupPolicy:
-                    description: |-
-                      BackupPolicy optionally requests storage protection integration before delete.
-                      Supported actions are None, Snapshot, and Backup.
                     enum:
                     - None
                     - Snapshot
                     - Backup
                     type: string
                   deletePolicy:
-                    description: |-
-                      DeletePolicy controls PVC retention for this GameServer.
-                      When set, this field takes precedence over spec.lifecycle.deletePolicy.
                     enum:
                     - Delete
                     - Retain
                     type: string
                   existingClaim:
-                    description: |-
-                      ExistingClaim is deprecated and not supported by the operator.
-                      Every GameServer gets its own managed PVC.
                     type: string
                   mountPath:
-                    description: MountPath is the path inside the container. Defaults
-                      to /data.
                     type: string
                   restoreFrom:
-                    description: |-
-                      RestoreFrom is an optional restore source identifier used by external tooling.
-                      The operator stores it as intent metadata and does not apply restore logic itself.
                     type: string
                   size:
                     anyOf:
                     - type: integer
                     - type: string
-                    description: Size is the requested PVC capacity, e.g. "10Gi".
                     pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
                     x-kubernetes-int-or-string: true
                   storageClassName:
-                    description: StorageClassName overrides the cluster default storage
-                      class.
                     type: string
                 type: object
             required:
             - game
             type: object
           status:
-            description: GameServerStatus is the observed state of a GameServer.
             properties:
               allocatedNode:
-                description: AllocatedNode is the name of the Kubernetes node running
-                  the server pod.
                 type: string
               conditions:
-                description: Conditions holds detailed state transitions following
-                  the standard Kubernetes pattern.
                 items:
                   description: "Condition contains details for one aspect of the current
                     state of this API Resource.\n---\nThis struct is intended for
@@ -1526,28 +1454,16 @@ spec:
                   - type
                   type: object
                 type: array
-                x-kubernetes-list-map-keys:
-                - type
-                x-kubernetes-list-type: map
               containerName:
-                description: ContainerName is the name of the game server container
-                  within the pod.
                 type: string
               endpoint:
-                description: Endpoint is the primary host:port the server is reachable
-                  on from outside the cluster.
                 type: string
               lastError:
-                description: LastError holds the most recent reconcile error message;
-                  cleared on success.
                 type: string
               observedGeneration:
-                description: ObservedGeneration is the .metadata.generation last processed
-                  by the controller.
                 format: int64
                 type: integer
               phase:
-                description: Phase summarises the server lifecycle.
                 enum:
                 - Pending
                 - Provisioning
@@ -1558,14 +1474,10 @@ spec:
                 - Suspended
                 type: string
               podName:
-                description: PodName is the name of the current game server pod.
                 type: string
               pvcName:
-                description: PVCName is the name of the dedicated PVC managed for
-                  this GameServer.
                 type: string
               serviceName:
-                description: ServiceName is the name of the managed Kubernetes Service.
                 type: string
             type: object
         type: object

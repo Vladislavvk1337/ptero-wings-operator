@@ -18,7 +18,7 @@ func TestStartupMapperResolve(t *testing.T) {
 	if len(command) != 1 || command[0] != "java" {
 		t.Fatalf("command = %v, want [java]", command)
 	}
-	if len(args) != 4 || args[0] != "-Xmx1024M" || args[2] != "-jar" || args[3] != "server.jar" {
+	if len(args) != 3 || args[0] != "-Xmx1024M" || args[1] != "-jar" || args[2] != "server.jar" {
 		t.Fatalf("args = %v", args)
 	}
 }

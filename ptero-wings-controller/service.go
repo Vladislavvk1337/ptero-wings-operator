@@ -205,11 +205,11 @@ func (s *EmbeddedService) gameServerFromRequest(req *CreateServerRequest) (*v1al
 			},
 		},
 		Spec: v1alpha1.GameServerSpec{
-			Game: v1alpha1.GameSpec{Type: req.GameType, Image: req.Image},
-			Runtime: v1alpha1.RuntimeSpec{ImagePullPolicy: corev1.PullIfNotPresent},
-			Storage: v1alpha1.StorageSpec{DeletePolicy: v1alpha1.DeletePolicyRetain, BackupPolicy: v1alpha1.BackupPolicyNone},
-			Lifecycle: v1alpha1.LifecycleSpec{DeletePolicy: v1alpha1.DeletePolicyRetain},
-			External: v1alpha1.ExternalSpec{ExternalServerID: req.ExternalServerID},
+			Game:        v1alpha1.GameSpec{Type: req.GameType, Image: req.Image},
+			Runtime:     v1alpha1.RuntimeSpec{ImagePullPolicy: corev1.PullIfNotPresent},
+			Storage:     v1alpha1.StorageSpec{DeletePolicy: v1alpha1.DeletePolicyRetain, BackupPolicy: v1alpha1.BackupPolicyNone},
+			Lifecycle:   v1alpha1.LifecycleSpec{DeletePolicy: v1alpha1.DeletePolicyRetain},
+			External:    v1alpha1.ExternalSpec{ExternalServerID: req.ExternalServerID},
 			Pterodactyl: &v1alpha1.PterodactylSpec{ServerUUID: req.UUID},
 		},
 	}

@@ -17,12 +17,12 @@ func TestClusterAllocatorAllocatesContiguousRange(t *testing.T) {
 	_ = v1alpha1.AddToScheme(scheme)
 	client := ctrlclientfake.NewClientBuilder().WithScheme(scheme).WithObjects(&v1alpha1.GameServer{
 		ObjectMeta: metav1.ObjectMeta{Name: "existing", Namespace: "default"},
-		Spec: v1alpha1.GameServerSpec{Network: v1alpha1.NetworkSpec{NodePortAllocation: &v1alpha1.NodePortAllocationSpec{StartPort: 30005, Count: 2, Protocol: corev1.ProtocolTCP}}},
+		Spec:       v1alpha1.GameServerSpec{Network: v1alpha1.NetworkSpec{NodePortAllocation: &v1alpha1.NodePortAllocationSpec{StartPort: 30005, Count: 2, Protocol: corev1.ProtocolTCP}}},
 	}).Build()
 	allocator := NewClusterAllocator(client, Config{MinPort: 30000, MaxPort: 30020})
 	gs := &v1alpha1.GameServer{
 		ObjectMeta: metav1.ObjectMeta{Name: "next", Namespace: "default"},
-		Spec: v1alpha1.GameServerSpec{Network: v1alpha1.NetworkSpec{NodePortAllocation: &v1alpha1.NodePortAllocationSpec{Count: 2, Protocol: corev1.ProtocolTCP}}},
+		Spec:       v1alpha1.GameServerSpec{Network: v1alpha1.NetworkSpec{NodePortAllocation: &v1alpha1.NodePortAllocationSpec{Count: 2, Protocol: corev1.ProtocolTCP}}},
 	}
 	ports, err := allocator.Allocate(context.Background(), gs)
 	if err != nil {

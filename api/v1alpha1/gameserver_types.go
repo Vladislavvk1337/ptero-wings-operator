@@ -68,12 +68,12 @@ type GameServerOwnerRef struct {
 }
 
 type GameSpec struct {
-	Type    string                  `json:"type"`
-	Image   string                  `json:"image,omitempty"`
-	Command []string                `json:"command,omitempty"`
-	Args    []string                `json:"args,omitempty"`
-	Env     []corev1.EnvVar         `json:"env,omitempty"`
-	EnvFrom []corev1.EnvFromSource  `json:"envFrom,omitempty"`
+	Type    string                 `json:"type"`
+	Image   string                 `json:"image,omitempty"`
+	Command []string               `json:"command,omitempty"`
+	Args    []string               `json:"args,omitempty"`
+	Env     []corev1.EnvVar        `json:"env,omitempty"`
+	EnvFrom []corev1.EnvFromSource `json:"envFrom,omitempty"`
 }
 
 type StartupSpec struct {
@@ -82,20 +82,20 @@ type StartupSpec struct {
 }
 
 type RuntimeSpec struct {
-	ImagePullPolicy  corev1.PullPolicy               `json:"imagePullPolicy,omitempty"`
-	ImagePullSecrets []corev1.LocalObjectReference   `json:"imagePullSecrets,omitempty"`
-	Startup          *StartupSpec                    `json:"startup,omitempty"`
+	ImagePullPolicy  corev1.PullPolicy             `json:"imagePullPolicy,omitempty"`
+	ImagePullSecrets []corev1.LocalObjectReference `json:"imagePullSecrets,omitempty"`
+	Startup          *StartupSpec                  `json:"startup,omitempty"`
 }
 
 type StorageSpec struct {
-	Size             resource.Quantity                   `json:"size,omitempty"`
-	StorageClassName *string                             `json:"storageClassName,omitempty"`
-	AccessMode       corev1.PersistentVolumeAccessMode  `json:"accessMode,omitempty"`
-	MountPath        string                              `json:"mountPath,omitempty"`
-	ExistingClaim    string                              `json:"existingClaim,omitempty"`
-	DeletePolicy     DeletePolicy                        `json:"deletePolicy,omitempty"`
-	BackupPolicy     BackupPolicy                        `json:"backupPolicy,omitempty"`
-	RestoreFrom      string                              `json:"restoreFrom,omitempty"`
+	Size             resource.Quantity                 `json:"size,omitempty"`
+	StorageClassName *string                           `json:"storageClassName,omitempty"`
+	AccessMode       corev1.PersistentVolumeAccessMode `json:"accessMode,omitempty"`
+	MountPath        string                            `json:"mountPath,omitempty"`
+	ExistingClaim    string                            `json:"existingClaim,omitempty"`
+	DeletePolicy     DeletePolicy                      `json:"deletePolicy,omitempty"`
+	BackupPolicy     BackupPolicy                      `json:"backupPolicy,omitempty"`
+	RestoreFrom      string                            `json:"restoreFrom,omitempty"`
 }
 
 type PortSpec struct {
@@ -113,22 +113,22 @@ type NodePortAllocationSpec struct {
 }
 
 type NetworkSpec struct {
-	Ports              []PortSpec               `json:"ports,omitempty"`
-	ServiceType        corev1.ServiceType       `json:"serviceType,omitempty"`
-	NodePortAllocation *NodePortAllocationSpec  `json:"nodePortAllocation,omitempty"`
+	Ports              []PortSpec              `json:"ports,omitempty"`
+	ServiceType        corev1.ServiceType      `json:"serviceType,omitempty"`
+	NodePortAllocation *NodePortAllocationSpec `json:"nodePortAllocation,omitempty"`
 }
 
 type SchedulingSpec struct {
-	NodeSelector map[string]string `json:"nodeSelector,omitempty"`
+	NodeSelector map[string]string   `json:"nodeSelector,omitempty"`
 	Tolerations  []corev1.Toleration `json:"tolerations,omitempty"`
-	Affinity     *corev1.Affinity `json:"affinity,omitempty"`
+	Affinity     *corev1.Affinity    `json:"affinity,omitempty"`
 }
 
 type LifecycleSpec struct {
-	Suspended              bool                `json:"suspended,omitempty"`
-	DeletePolicy           DeletePolicy        `json:"deletePolicy,omitempty"`
-	RestartPolicy          corev1.RestartPolicy `json:"restartPolicy,omitempty"`
-	TTLSecondsAfterFinished *int64             `json:"ttlSecondsAfterFinished,omitempty"`
+	Suspended               bool                 `json:"suspended,omitempty"`
+	DeletePolicy            DeletePolicy         `json:"deletePolicy,omitempty"`
+	RestartPolicy           corev1.RestartPolicy `json:"restartPolicy,omitempty"`
+	TTLSecondsAfterFinished *int64               `json:"ttlSecondsAfterFinished,omitempty"`
 }
 
 type ProtectionSpec struct {
@@ -147,18 +147,18 @@ type PterodactylSpec struct {
 }
 
 type GameServerSpec struct {
-	ClassRef     *corev1.LocalObjectReference `json:"classRef,omitempty"`
-	OwnerRef     *GameServerOwnerRef          `json:"ownerRef,omitempty"`
-	Game         GameSpec                     `json:"game"`
-	Runtime      RuntimeSpec                  `json:"runtime,omitempty"`
-	Resources    corev1.ResourceRequirements  `json:"resources,omitempty"`
-	Storage      StorageSpec                  `json:"storage,omitempty"`
-	Network      NetworkSpec                  `json:"network,omitempty"`
-	Scheduling   SchedulingSpec               `json:"scheduling,omitempty"`
-	Lifecycle    LifecycleSpec                `json:"lifecycle,omitempty"`
-	Protection   ProtectionSpec               `json:"protection,omitempty"`
-	External     ExternalSpec                 `json:"external,omitempty"`
-	Pterodactyl  *PterodactylSpec             `json:"pterodactyl,omitempty"`
+	ClassRef    *corev1.LocalObjectReference `json:"classRef,omitempty"`
+	OwnerRef    *GameServerOwnerRef          `json:"ownerRef,omitempty"`
+	Game        GameSpec                     `json:"game"`
+	Runtime     RuntimeSpec                  `json:"runtime,omitempty"`
+	Resources   corev1.ResourceRequirements  `json:"resources,omitempty"`
+	Storage     StorageSpec                  `json:"storage,omitempty"`
+	Network     NetworkSpec                  `json:"network,omitempty"`
+	Scheduling  SchedulingSpec               `json:"scheduling,omitempty"`
+	Lifecycle   LifecycleSpec                `json:"lifecycle,omitempty"`
+	Protection  ProtectionSpec               `json:"protection,omitempty"`
+	External    ExternalSpec                 `json:"external,omitempty"`
+	Pterodactyl *PterodactylSpec             `json:"pterodactyl,omitempty"`
 }
 
 type GameServerStatus struct {

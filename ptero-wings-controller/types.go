@@ -44,19 +44,19 @@ type ResourceLimits struct {
 }
 
 type CreateServerRequest struct {
-	UUID             string            `json:"uuid"`
-	GameType         string            `json:"game_type"`
-	Image            string            `json:"image"`
-	Environment      map[string]string `json:"environment"`
-	Limits           ResourceLimits    `json:"limits"`
-	DiskMB           int64             `json:"disk"`
+	UUID             string              `json:"uuid"`
+	GameType         string              `json:"game_type"`
+	Image            string              `json:"image"`
+	Environment      map[string]string   `json:"environment"`
+	Limits           ResourceLimits      `json:"limits"`
+	DiskMB           int64               `json:"disk"`
 	Allocations      []AllocationRequest `json:"allocations"`
-	Startup          string            `json:"startup,omitempty"`
-	StartupVariables map[string]string `json:"startup_variables,omitempty"`
-	PortRangeStart   int32             `json:"port_range_start,omitempty"`
-	PortRangeCount   int32             `json:"port_range_count,omitempty"`
-	PortRangeBase    int32             `json:"port_range_base,omitempty"`
-	ExternalServerID string            `json:"external_server_id,omitempty"`
+	Startup          string              `json:"startup,omitempty"`
+	StartupVariables map[string]string   `json:"startup_variables,omitempty"`
+	PortRangeStart   int32               `json:"port_range_start,omitempty"`
+	PortRangeCount   int32               `json:"port_range_count,omitempty"`
+	PortRangeBase    int32               `json:"port_range_base,omitempty"`
+	ExternalServerID string              `json:"external_server_id,omitempty"`
 }
 
 type ServerView struct {

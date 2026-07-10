@@ -22,15 +22,15 @@ import (
 )
 
 type GameServerClassSpec struct {
-	GameType          string                     `json:"gameType"`
-	DefaultImage      string                     `json:"defaultImage,omitempty"`
-	DefaultCommand    []string                   `json:"defaultCommand,omitempty"`
-	DefaultArgs       []string                   `json:"defaultArgs,omitempty"`
-	DefaultStartup    *StartupSpec               `json:"defaultStartup,omitempty"`
+	GameType          string                      `json:"gameType"`
+	DefaultImage      string                      `json:"defaultImage,omitempty"`
+	DefaultCommand    []string                    `json:"defaultCommand,omitempty"`
+	DefaultArgs       []string                    `json:"defaultArgs,omitempty"`
+	DefaultStartup    *StartupSpec                `json:"defaultStartup,omitempty"`
 	DefaultResources  corev1.ResourceRequirements `json:"defaultResources,omitempty"`
-	DefaultStorage    StorageSpec                `json:"defaultStorage,omitempty"`
-	DefaultNetwork    NetworkSpec                `json:"defaultNetwork,omitempty"`
-	PlacementDefaults SchedulingSpec             `json:"placementDefaults,omitempty"`
+	DefaultStorage    StorageSpec                 `json:"defaultStorage,omitempty"`
+	DefaultNetwork    NetworkSpec                 `json:"defaultNetwork,omitempty"`
+	PlacementDefaults SchedulingSpec              `json:"placementDefaults,omitempty"`
 }
 
 //+kubebuilder:object:root=true

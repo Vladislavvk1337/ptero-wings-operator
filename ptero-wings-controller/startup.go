@@ -66,10 +66,10 @@ func mergedVariables(variables map[string]string, env []corev1.EnvVar) map[strin
 
 func splitCommand(raw string) ([]string, error) {
 	var (
-		tokens   []string
-		current  strings.Builder
-		quote    rune
-		escaped  bool
+		tokens  []string
+		current strings.Builder
+		quote   rune
+		escaped bool
 	)
 
 	flush := func() {

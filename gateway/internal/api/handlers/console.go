@@ -60,7 +60,8 @@ func (h *ConsoleHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusBadRequest, "missing server uuid")
 		return
 	}
-	conn, err := newUpgrader(h.AllowedOrigins).Upgrade(w, r, nil)
+	upgrader := newUpgrader(h.AllowedOrigins)
+	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		slog.Error("ws upgrade failed", "err", err)
 		return
