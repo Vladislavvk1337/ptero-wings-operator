@@ -32,6 +32,16 @@ The gateway accepts external panel traffic, forwards it to the controller servic
 - Bundled NodePort allocation via `spec.network.nodePortAllocation`
 - Optional panel resource push using `PANEL_URL` + `PANEL_TOKEN`
 - Wings-like HTTP and WebSocket endpoints for create/power/resources/logs/console
+## Dockerfile 
+
+# Operator
+docker build -f Dockerfile.operator -t ptero-wings-operator:latest .
+
+# Gateway
+docker build -f Dockerfile.gateway -t ptero-wings-gateway:latest .
+
+# Controller (optional)
+docker build -f Dockerfile.controller -t ptero-wings-controller:latest .
 
 ## Install
 
