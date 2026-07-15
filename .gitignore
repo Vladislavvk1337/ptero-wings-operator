@@ -7,6 +7,10 @@
 *.dylib
 bin/*
 Dockerfile.cross
+*.pem
+*.key
+secrets/
+.env
 
 # Test binary, built with `go test -c`
 *.test
