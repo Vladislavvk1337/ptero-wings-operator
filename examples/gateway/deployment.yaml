@@ -27,7 +27,7 @@ spec:
           type: RuntimeDefault
       containers:
         - name: gateway
-          image: ghcr.io/vladislavvk1337/ptero-wings-gateway:latest
+          image: vl4dvk/ptero-wings-gateway:latest
           imagePullPolicy: IfNotPresent
           args:
             - --tls-cert=/tls/tls.crt

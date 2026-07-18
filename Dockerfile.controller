@@ -1,14 +1,20 @@
-FROM golang:1.21 AS builder
+FROM golang:1.22 AS builder
 ARG TARGETOS
 ARG TARGETARCH
 
 WORKDIR /workspace
 COPY go.mod go.sum ./
-RUN go mod download
+RUN --mount=type=cache,target=/go/pkg/mod \ 
+    go mod download
 
-COPY ptero-wings-controller/ ./
+COPY ./ptero-wings-controller ./ptero-wings-controller 
+COPY ./api ./api
+COPY ./cmd ./cmd
+COPY ./internal ./internal
+COPY ./controllers ./controllers
 
-RUN CGO_ENABLED=0 GOOS=${TARGETOS:-linux} GOARCH=${TARGETARCH} go build -a -o controller-service ./...
+
+RUN CGO_ENABLED=0 GOOS=${TARGETOS:-linux} GOARCH=${TARGETARCH} go build -a -o controller-service ./ptero-wings-controller
 
 FROM gcr.io/distroless/static:nonroot
 WORKDIR /

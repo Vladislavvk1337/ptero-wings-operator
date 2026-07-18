@@ -17,7 +17,7 @@ spec:
       serviceAccountName: ptero-wings-controller
       containers:
         - name: controller
-          image: ghcr.io/vladislavvk1337/ptero-wings-controller:latest
+          image: vl4dvk/ptero-wings-controller:latest
           imagePullPolicy: IfNotPresent
           env:
             - name: GAMESERVER_NS
@@ -25,10 +25,11 @@ spec:
             - name: PANEL_URL
               value: https://panel.example.com
             - name: PANEL_TOKEN
-              valueFrom:
-                secretKeyRef:
-                  name: ptero-wings-controller
-                  key: panel-token
+              value: ""
+              # valueFrom:
+              #   secretKeyRef:
+              #     name: ptero-wings-controller
+              #     key: panel-token
             - name: NODEPORT_MIN
               value: "30000"
             - name: NODEPORT_MAX
